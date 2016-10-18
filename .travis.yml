@@ -21,6 +21,6 @@ install:
   - pip install pep8 python-coveralls
   - pip install -r requirements.txt
 script:
-  - py.test
+  - py.test -v --color=yes
 after_success:
   - coveralls
