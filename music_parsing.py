@@ -80,7 +80,7 @@ def array_to_wav(filename, time_series_data, sample_rate, filepath=None):
         # If the directory you want to put the file in doesn't exist, create it
         if not os.path.exists(filepath):
             os.makedirs(filepath)
-        filepath += filename
+        filepath += '/' + filename
         # This should output a wav file correctly. maybe?
         librosa.output.write_wav(filepath, time_series_data, sample_rate)
     except:

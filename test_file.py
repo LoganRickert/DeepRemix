@@ -14,14 +14,8 @@ def test_music_parsing_with_good_input():
     # so that we can test turning it back into the original piece
     fname1 = "./data/input_wavs/got_s1e1_bastard.wav"
     fname2 = "output.wav"
-    filepath = "./data/temp_output/"
+    filepath = "./data/temp_output"
     n_mfcc = 400
-
-    # create a temporary directory to make sure there is actually output.
-    if not os.path.exists(filepath):
-        os.mkdir(filepath)
-
-    assert len(os.listdir(filepath)) == 0
 
     # check that data is the right shape/size
     data, sample_rate = parse_wav(fname1, n_mfcc)
