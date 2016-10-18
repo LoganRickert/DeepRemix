@@ -4,6 +4,7 @@ import os
 from scipy.io import wavfile
 import numpy as np
 import librosa
+import sys
 
 
 def parse_wav(filename, n_mfcc=40):
@@ -22,7 +23,7 @@ def parse_wav(filename, n_mfcc=40):
     '''
 
     song_data = np.array([])
-    sr = -1
+    sample_rate = -1
     if filename[-4:] == '.wav':
         try:
             y_data, sample_rate = librosa.load(filename)
@@ -75,12 +76,15 @@ def array_to_wav(filename, time_series_data, sample_rate, filepath=None):
     if filepath is None:
         filepath = "./data/output_wavs"
 
-    filepath = os.path.join(filepath, filename)
     try:
+        # If the directory you want to put the file in doesn't exist, create it
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+        filepath += filename
         # This should output a wav file correctly. maybe?
         librosa.output.write_wav(filepath, time_series_data, sample_rate)
     except:
-        print("Could not write data to {0}.".format(filepath))
+        print("Could not write data to {0}".format(filepath))
 
 
 if __name__ == "__main__":
