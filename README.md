@@ -1,7 +1,7 @@
 # DeepRemix
 ## Remixing Music with Deep Learning
 
-An interface in which you can give it a song, and a style for the song to be remixed in, and a LSTM neural network will remix it and output a remixed song.
+An interface in which you input a number of songs by one artist, and a song by another artist. Then a LSTM neural network in a GAN framework will output a remix of the song in the style of the first artist. Inputs are being parsed as Mel-Frequency Cepstrum Coefficients. Testing is done using PyTest and TravisCI.
 
 For more information see [DeepRemix.com.](https://deepremix.com)
 
@@ -10,20 +10,21 @@ For more information see [DeepRemix.com.](https://deepremix.com)
 * Keras
 * Scipy
 * Numpy
-* PyDub (for input parsing)
-* PyTest (for testing)
+* librosa
+* PyTest
+
 
 ## Usage
 
-Clone the repository, copy the song you'd like to remix into `./data/Music` and run
+Clone the repository, copy the song you'd like to remix into `./data/to_remix` and run
 
- `python scriptforparsingmusicgoeshere.py`
+ `python music_parsing.py`
 
- Once the song has been put in an appopriate representational state, you can now run it through the neural network by running:
+ Once the song has been put in an appropriate representational state (MFCC), you can now run it through the neural network by running:
 
  `python scriptthatrunsnetworkgoeshere.py`
 
- This will save the output song into `./data/Output`
+ This will save the output song into `./data/output_wavs`
 
 # Travis CI
 ## To test a build, do the following:
