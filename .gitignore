@@ -25,7 +25,7 @@ var/
 *.egg
 
 # Data I/O files
-data/
+data/output_wavs/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
