@@ -3,7 +3,7 @@
 
 An interface in which you input a number of songs by one artist, and a song by another artist. Then a LSTM neural network in a GAN framework will output a remix of the song in the style of the first artist. Inputs are being parsed as Mel-Frequency Cepstrum Coefficients. Testing is done using PyTest and TravisCI.
 
-For more information see [DeepRemix.com.](https://deepremix.com)
+For more information see [DeepRemix.com.](http://deepremix.com)
 
 ## Dependencies
 * Python 2.7
