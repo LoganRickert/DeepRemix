@@ -15,6 +15,8 @@ class Game:
         self.url = url + json['gameID']
         self.playerID = json['playerID']
 
+        return self, json
+
     def _submit_move(self, move):
         r = requests.post(self.url, data={'playerID': self.playerID,
             'move': move, 'devkey': self.devkey})
