@@ -18,15 +18,25 @@ def nearbyTiles(board, loc):
 	rightTile = { 'x': loc['x'], 'y': loc['y'] + 1 }
 	topTile = { 'x': loc['x'], 'y': loc['y'] + 1 }
 	bottomTile = { 'x': loc['x'], 'y': loc['y'] - 1 }
+	
 	if isTileMoveable(board, leftTile):
 		validTiles.append(leftTile)
+	
 	if isTileMoveable(board, rightTile):
 		validTiles.append(rightTile)
+
 	if isTileMoveable(board, topTile):
 		validTiles.append(topTile)
+
 	if isTileMoveable(board, bottomTile):
 		validTiles.append(bottomTile)
+
 	return validTiles
+
+def destroyedTilesFromBombAtLocation(game, tile):
+	# meh
+	return []
+
 
 def findMove(game):
 	board = game.board
@@ -35,8 +45,17 @@ def findMove(game):
 
 	nearby = nearbyTiles(game.board, game.playerLocation)
 
+	maxDestroyedCount = 0
+	maxDestroyPosition = {}
+
 	for t in nearby:
-		print t
+		destroyCount = destroyedTilesFromBombAtLocation(game, t)
+		if (destroyCount > maxDestroyedCount):
+			maxDestroyedCount = destroyCount
+			maxDestroyPosition = t
+
+	print maxDestroyPosition
+	print maxDestroyedCount
 
 if __name__ == '__main__':
 	game = Game(devkey, username, True)
