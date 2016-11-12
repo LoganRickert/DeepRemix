@@ -2,7 +2,6 @@ import time
 import requests
 import random
 
-
 devkey = '582651d63c0cc0ed06f9da1d'
 username = 'charlieyou'
 
