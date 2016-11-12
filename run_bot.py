@@ -4,10 +4,13 @@ devkey = '582632dd3c0cc0ed06f9d05a'
 username = 'mxms'
 
 def isTileInBoard(board, tile):
-	return false
+	return tile['x'] < 10 and tile['x'] > 0 and tile['y'] > 0 and tile['y'] < 1
+
+def tileValueAtLocation(board, loc):
+	return board[loc['x']*9 + loc['y']]
 
 def isTileMoveable(board, loc):
-	return isTileInBoard(board, loc) and loc['x'] < 10 and loc['x'] > 0 and loc['y'] > 0 and loc['y'] < 10:
+	return isTileInBoard(board, loc) and tileValueAtLocation(board, loc) == 0
 
 def nearbyTiles(board, loc):
 	validTiles = []
