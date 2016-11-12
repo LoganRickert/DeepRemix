@@ -2,7 +2,6 @@ import requests
 
 
 class Game:
-<<<<<<< HEAD
 	
 	def createBoard(self, hardTiles, softTiles):
 		newArray = []
@@ -56,7 +55,7 @@ class Game:
 
 	def buy(self, power_up):
 		return self._submit_move('buy_' + power_up)
-=======
+
     def __init__(self, devkey, username, practice=True):
         if practice:
             url = 'http://aicomp.io/api/games/practice'
@@ -96,4 +95,4 @@ class Game:
 
     def buy(self, power_up):
         return self._submit_move('buy_' + power_up)
->>>>>>> 59f3edb8c90ba3390634bc694ecf825fdd193f20
+
