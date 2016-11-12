@@ -34,8 +34,31 @@ def nearbyTiles(board, loc):
 	return validTiles
 
 def destroyedTilesFromBombAtLocation(game, tile):
+	tileCount = 0
+	yfound = 0
+	for i in range(0, 11):
+		tt = { 'x' : title['x'], 'y': i }
+		if tileValueAtLocation(game, tt) == 1: # unbreakable
+			if i > tile['y']:
+				break
+			else:
+				yfound = 0
+		elif tileValueAtLocation(game, tt) == 2:
+			yfound = yfound + 1
+
+	xfound = 0
+	for i in range(0, 11):
+		tt = { 'x': i, 'y': tile['y'] }
+		if tileValueAtLocation(game, tt) == 1:
+			if i > tt['x']:
+				break
+			else:
+				xfound = 0
+		elif tileValueAtLocation(game, tt) == 2:
+			xfound = xfound + 1
+	
 	# meh
-	return []
+	return xfound + yfound
 
 
 def findMove(game):
