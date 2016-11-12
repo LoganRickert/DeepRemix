@@ -11,11 +11,13 @@ class Game:
         r = requests.post(url, data={'devkey': devkey, 'username': username})
         json = r.json()
 
+        self.json = json
         self.devkey = devkey
         self.url = url + json['gameID']
         self.playerID = json['playerID']
 
-        return self, json
+    def get_json(self):
+        return self.json
 
     def _submit_move(self, move):
         r = requests.post(self.url, data={'playerID': self.playerID,
