@@ -11,9 +11,10 @@ class GameState:
         soft_tiles = json['softBlockBoard']
         blocked_tiles = [2 if h else 1 if s else 0 for h, s in
                 zip(hard_tiles, soft_tiles)]
-        board = [blocked_tiles[i: i + 11] for i in
+        self.board = [blocked_tiles[i: i + 11] for i in
                 xrange(0, len(blocked_tiles), 11)]
-        print board
+
+        self.completed = json['state'] == 'completed'
 
 
 class Game:

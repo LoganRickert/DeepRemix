@@ -1,5 +1,5 @@
 from game import Game
-
+from bots import QualifierBot
 
 devkey = '58268225b642e9d038e35c52'
 username = 'charlieyou'
@@ -7,5 +7,9 @@ username = 'charlieyou'
 # username = 'mxms'
 
 if __name__ == '__main__':
-    gg = Game(devkey, username, practice=True, local=True)
-    # tt = gg.board.findMove(gg)
+    game = Game(devkey, username, practice=True, local=True)
+    bot = QualifierBot(game.state)
+
+    while not game.state.completed:
+        move = bot.get_move(game.state)
+        game.submit_move(move)
