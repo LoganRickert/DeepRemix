@@ -14,19 +14,22 @@ class GameState:
                 zip(hard_tiles, soft_tiles)]
         self.board = [blocked_tiles[i: i + 11] for i in
                 xrange(0, len(blocked_tiles), 11)]
+        # transpose board
+        self.board = map(list, zip(*self.board))
 
         self.completed = json['state'] == 'completed'
 
-        Location = namedtuple('Location', ['x', 'y'])
-        self.player_location = Location(json['player']['x'],
+        self.Location = namedtuple('Location', ['x', 'y'])
+        self.player_location = self.Location(json['player']['x'],
                 json['player']['y'])
-        self.opponent_location = Location(json['opponent']['x'],
+        self.opponent_location = self.Location(json['opponent']['x'],
                 json['opponent']['y'])
 
         # self.bomb_map = json['bombMap']
 
     def opponent_relative_location(self):
-        pass
+        return self.Location(self.player_location.x - self.opponent_location.x,
+                self.player_location.y - self.opponent_location.y)
 
 
 class Game:
@@ -34,7 +37,6 @@ class Game:
     Game is used as a wrapper around the post requests with the server
 
     '''
-
     def __init__(self, devkey, username, practice=True, local=True):
         if local:
             url = 'http://localhost:80/'
