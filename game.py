@@ -9,14 +9,11 @@ class GameState:
     def __init__(self, json):
         hard_tiles = json['hardBlockBoard']
         soft_tiles = json['softBlockBoard']
-        blocked_tiles = []
-        for h, s in zip(hard_tiles, soft_tiles):
-            if h:
-                blocked_tiles.append(2)
-            elif s:
-                blocked_tiles.append(1)
-            else:
-                blocked_tiles.append(0)
+        blocked_tiles = [2 if h else 1 if s else 0 for h, s in
+                zip(hard_tiles, soft_tiles)]
+        board = [blocked_tiles[i: i + 11] for i in
+                xrange(0, len(blocked_tiles), 11)]
+        print board
 
 
 class Game:
