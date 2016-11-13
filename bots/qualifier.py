@@ -2,8 +2,8 @@ from bot import Bot
 
 
 class QualifierBot(Bot):
-    def __init__(self):
-        pass
+    def __init__(self, state):
+        self.states = [state]
 
     def get_move(self, state):
-        pass
+        self.states.append(state)

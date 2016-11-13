@@ -1,4 +1,5 @@
 import requests
+from collections import namedtuple
 
 
 class GameState:
@@ -15,6 +16,17 @@ class GameState:
                 xrange(0, len(blocked_tiles), 11)]
 
         self.completed = json['state'] == 'completed'
+
+        Location = namedtuple('Location', ['x', 'y'])
+        self.player_location = Location(json['player']['x'],
+                json['player']['y'])
+        self.opponent_location = Location(json['opponent']['x'],
+                json['opponent']['y'])
+
+        # self.bomb_map = json['bombMap']
+
+    def opponent_relative_location(self):
+        pass
 
 
 class Game:
