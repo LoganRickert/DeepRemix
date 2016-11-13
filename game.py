@@ -1,69 +1,71 @@
 import requests
-from board import Board
+
+
+class GameState:
+    '''
+    GameState is used to store the current state of the game
+
+    '''
+    def __init__(self, json):
+        hard_tiles = json['hardBlockBoard']
+        soft_tiles = json['softBlockBoard']
+        blocked_tiles = []
+        for h, s in zip(hard_tiles, soft_tiles):
+            if h:
+                blocked_tiles.append(2)
+            elif s:
+                blocked_tiles.append(1)
+            else:
+                blocked_tiles.append(0)
 
 
 class Game:
+    '''
+    Game is used as a wrapper around the post requests with the server
 
-    def createBoard(self, hardTiles, softTiles):
-        newArray = []
-        for i in range(0, len(hardTiles)):
-            if hardTiles[i] != 0:
-                    newArray.append(1)
-            elif softTiles[i] != 0:
-                    newArray.append(2)
-            else:
-                    newArray.append(0)
+    '''
 
-        return Board(newArray)
+    def __init__(self, devkey, username, practice=True, local=True):
+        if local:
+            url = 'http://localhost:80/'
+        else:
+            url = 'http://aicomp.io/'
 
-    def __init__(self, devkey, username, practice=True):
-        print "hi"
+        self.url = url + 'api/submit/'
 
         if practice:
-            url = 'http://aicomp.io/api/games/practice'
+            url += 'api/games/practice'
         else:
-            url = 'http://aicomp.io/api/games/search'
+            url += 'api/games/search'
 
-        r = requests.post(url, data={'devkey': devkey, 'username': username})
-        json = r.json()
+        response = requests.post(url, data={'devkey': devkey,
+            'username': username}).json()
 
-        self.board = self.createBoard(json['hardBlockBoard'],
-                json['softBlockBoard'])
-
+        self.url += response['gameID']
+        self.playerID = response['playerID']
         self.devkey = devkey
-        self.url = url + json['gameID']
-        self.playerID = json['playerID']
-        self.playerInfo = json['player']
-        self.opponentInfo = json['opponent']
-        self.playerLocation = {'x': self.playerInfo['x'],
-                'y': self.playerInfo['y']}
-        self.opponentLocation = {'x': self.opponentInfo['x'],
-                'y': self.opponentInfo['y']}
 
-        print self.board
-
-    def get_json(self):
-        return self.json
+        self.state = GameState(response)
 
     def _submit_move(self, move):
-        r = requests.post(self.url, data={'playerID': self.playerID,
-            'move': move, 'devkey': self.devkey})
-        return r.json()
+        response = requests.post(self.url, data={'playerID': self.playerID,
+            'move': move, 'devkey': self.devkey}).json()
+        self.state = GameState(response)
 
     def drop_bomb(self):
-        return self._submit_move('b')
+        self._submit_move('b')
 
     def do_nothing(self):
-        return self._submit_move('')
+        self._submit_move('')
 
     def move(self, direction):
-        return self._submit_move('m' + direction[0])
+        self._submit_move('m' + direction[0])
 
     def turn(self, direction):
-        return self._submit_move('t' + direction[0])
+        self._submit_move('t' + direction[0])
 
     def shoot_portal(self, color):
-        return self._submit_move(color[0] + 'p')
+        self._submit_move(color[0] + 'p')
 
     def buy(self, power_up):
-        return self._submit_move('buy_' + power_up)
+        self._submit_move('buy_' + power_up)
