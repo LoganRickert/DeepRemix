@@ -105,19 +105,19 @@ class Game:
         # need to add the other moves
 
     def drop_bomb(self):
-        self._submit_move('b')
+        self.submit_move('b')
 
     def do_nothing(self):
-        self._submit_move('')
+        self.submit_move('')
 
     def move(self, direction):
-        self._submit_move('m' + direction[0])
+        self.submit_move('m' + direction[0])
 
     def turn(self, direction):
-        self._submit_move('t' + direction[0])
+        self.submit_move('t' + direction[0])
 
     def shoot_portal(self, color):
-        self._submit_move(color[0] + 'p')
+        self.submit_move(color[0] + 'p')
 
     def buy(self, power_up):
-        self._submit_move('buy_' + power_up)
+        self.submit_move('buy_' + power_up)
