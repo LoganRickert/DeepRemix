@@ -1,6 +1,10 @@
 import requests
 from collections import namedtuple
 
+class Location:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
 class GameState:
     '''
@@ -20,10 +24,8 @@ class GameState:
         self.completed = json['state'] == 'completed'
 
         self.Location = namedtuple('Location', ['x', 'y'])
-        self.player_location = self.Location(json['player']['x'],
-                json['player']['y'])
-        self.opponent_location = self.Location(json['opponent']['x'],
-                json['opponent']['y'])
+        self.player_location = self.Location(json['player']['x'], json['player']['y'])
+        self.opponent_location = self.Location(json['opponent']['x'], json['opponent']['y'])
 
         # self.bomb_map = json['bombMap']
 
@@ -35,7 +37,7 @@ class GameState:
 class Game:
     '''
     Game is used as a wrapper around the post requests with the server
-
+    
     '''
     def __init__(self, devkey, username, practice=True, local=True):
         if local:
@@ -43,7 +45,7 @@ class Game:
         else:
             url = 'http://aicomp.io/'
 
-        self.url = url + 'api/submit/'
+        self.url = url + 'api/games/submit/'
 
         if practice:
             url += 'api/games/practice'
@@ -52,6 +54,8 @@ class Game:
 
         response = requests.post(url, data={'devkey': devkey,
             'username': username}).json()
+            
+        print response
 
         self.url += response['gameID']
         self.playerID = response['playerID']
@@ -60,9 +64,24 @@ class Game:
         self.state = GameState(response)
 
     def _submit_move(self, move):
-        response = requests.post(self.url, data={'playerID': self.playerID,
-            'move': move, 'devkey': self.devkey}).json()
-        self.state = GameState(response)
+        print move
+        data = {'playerID': self.playerID, 'move': move, 'devkey': self.devkey}
+        print data
+        response = requests.post(self.url, data)
+        print response
+        print self.url
+        self.state = GameState(response.json())
+
+    def submit_move(self, userMove):
+        if userMove == 'b':
+            self.drop_bomb()
+        elif userMove == '':
+           self.do_nothing()
+        elif userMove[0] == 'm':
+            self.move(userMove[-1:])
+        elif userMove[0] == 't':
+            self.turn(userMove[-1:])
+        # need to add the other moves
 
     def drop_bomb(self):
         self._submit_move('b')
