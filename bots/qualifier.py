@@ -70,6 +70,8 @@ class QualifierBot(Bot):
         return self.valueAtLocation(state, loc) == 3
 
     def bestSafeMoveTowardsEnemey(self, state, loc):
+        # assumptions: not already in bomb path
+
         pass
 
     def closestMoveOutOfDangerFromBomb(self, state, bomb_loc):
