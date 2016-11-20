@@ -1,3 +1,4 @@
+from copy import deepcopy
 from bot import Bot
 from game import Location
 
@@ -72,13 +73,23 @@ class QualifierBot(Bot):
         pass
 
     def closestMoveOutOfDangerFromBomb(self, state, bomb_loc):
-        state.board = self.bomb_effected_area(bomb_loc)
-        return self.closestMoveOutOfDanger(state, bomb_loc)
+        st = deepcopy(state)
+        st.board = self.bomb_effected_area(bomb_loc)
+        return self.closestMoveOutOfDanger(st, bomb_loc)
 
-    def possibleToSurviveDroppingBomb(self, state, loc, bombLoc):
+    def possibleToSurviveDroppingBomb(self, state, loc, bomb_loc):
         # should just call closestMoveOutOfDangerFromBomb iteratively and
         # see if its less than 3
-        return True
+        mov = loc
+        length = 0
+        while True:
+            # should be just > ?
+            if length >= 3:
+                return True
+            if self.tileIsWithinBombPath(state, mov):
+                mov = self.closestMoveOutOfDangerFromBomb(state, bomb_loc)
+                length += 1
+        return False
 
     def get_optimal_moves(self, state):
         print "a" + repr(state.player_location)
