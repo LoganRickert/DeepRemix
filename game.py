@@ -34,7 +34,7 @@ class GameState:
     def bomb_effected_area(self, bomb_map):
         board = self.board
         range_ = 3
-        locations = [Location(k[0], k[2]) for k, v in bomb_map.iteritems()]
+        locations = [Location(int(k[0]), int(k[2])) for k, v in bomb_map.iteritems()]
 
         for loc in locations:
             for n in xrange(loc.x - range_, loc.x + range_):
@@ -97,6 +97,8 @@ class Game:
         if userMove == 'b':
             self.drop_bomb()
         elif userMove == '':
+            self.do_nothing()
+        elif userMove == None:
             self.do_nothing()
         elif userMove[0] == 'm':
             self.move(userMove[-1:])
