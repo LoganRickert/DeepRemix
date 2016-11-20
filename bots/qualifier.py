@@ -72,11 +72,7 @@ class QualifierBot(Bot):
         pass
 
     def closestMoveOutOfDangerFromBomb(self, state, bomb_loc):
-        def place_bomb(state, bomb_loc):
-
-            return state
-
-        state = place_bomb(state, bomb_loc)
+        state.board = self.bomb_effected_area(bomb_loc)
         return self.closestMoveOutOfDanger(state, bomb_loc)
 
     def possibleToSurviveDroppingBomb(self, state, loc, bombLoc):
