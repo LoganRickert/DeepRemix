@@ -71,8 +71,9 @@ class QualifierBot(Bot):
 
     def bestSafeMoveTowardsEnemey(self, state, loc):
         # assumptions: not already in bomb path
+        direction = ''
 
-        pass
+        return 'm' + direction
 
     def closestMoveOutOfDangerFromBomb(self, state, bomb_loc):
         st = deepcopy(state)
@@ -91,6 +92,8 @@ class QualifierBot(Bot):
             if self.tileIsWithinBombPath(state, mov):
                 mov = self.closestMoveOutOfDangerFromBomb(state, bomb_loc)
                 length += 1
+            else:
+                break
         return False
 
     def get_optimal_moves(self, state):
