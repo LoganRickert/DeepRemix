@@ -56,7 +56,7 @@ class QualifierBot(Bot):
         
         while True:
             if tileIsWithinBombPath(state, mov):
-                mov = closestMoveOutOfDanger
+                mov = closestMoveOutOfDanger(state, mov)
                 length = length + 1
             else:
                 break
@@ -64,7 +64,7 @@ class QualifierBot(Bot):
         return length
     
     def tileIsWithinBombPath(self, state, loc):
-        print loc
+        print "b" + repr( loc)
         return self.valueAtLocation(state, loc) == 3
     
     def bestSafeMoveTowardsEnemey(self, state, loc):
@@ -80,7 +80,7 @@ class QualifierBot(Bot):
     
 
     def get_optimal_moves(self, state):
-        print state.player_location
+        print "a" + repr( state.player_location)
         if self.tileIsWithinBombPath(state, state.player_location):
             # in danger, move, hopefully towards opponent
             
@@ -154,7 +154,7 @@ class QualifierBot(Bot):
         return sorted(locations, key=lambda x: self.numberOfTilesDestroyedByBombAtLocation(state, x))
 
     def valueAtLocation(self, state, tile):
-        print tile
+        print "c" + repr(tile)
         return state.board[tile.x][tile.y]
 
     def tileIsMovable(self, state, tile):
