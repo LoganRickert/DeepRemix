@@ -17,18 +17,18 @@ def sgn(x):
 
 class QualifierBot(Bot):
     bombs = []
-
+    
     def __init__(self, state):
         self.states = [state]
-
+    
     def get_move(self, state):
         self.states.append(state)
         print "=================================="
         print "STARTING NEW STATE: "
         self.printBoard(state)
-
+        
         return self.get_optimal_moves(state)
-
+    
     def printBoard(self, state):
         for i in range(1, 10):
             for j in range(1, 10):
@@ -53,192 +53,8 @@ class QualifierBot(Bot):
             return 'ml'
         elif dest.x > loc.x:
             return 'mr'
+
         return None
-
-    def serialize(self, state, moves):
-        ret = []
-
-        lastMove = state.player_location
-
-        for mov in moves:
-            if isinstance(mov, Location):
-                ret.append(self.directionBetweenMoves(lastMove, mov))
-                lastMove = mov
-            else:
-                ret.append(mov)
-
-        return ret
-
-    def recursiveSearchForSafety(self, state, loc, prev):
-        initialStates = self.immediateMovableTilesNearby(state, loc)
-
-        for st in initialStates:
-            if prev is not None and (st.x != prev.x or st.y != prev.y):
-                if self.valueAtLocation(state, st) == 0:
-                    return 1
-                elif self.valueAtLocation(state, st) == 3:
-                    return 1 + self.recursiveSearchForSafety(state, st, loc)
-        return 100000
-
-    def immediateMovableTilesNearby(self, state, loc):
-        ret = []
-
-        leftTile = Location(loc.x - 1, loc.y)
-        rightTile = Location(loc.x + 1, loc.y)
-        topTile = Location(loc.x, loc.y - 1)
-        bottomTile = Location(loc.x, loc.y + 1)
-        if self.valueAtLocation(state, leftTile) not in (1, 2):
-            ret.append(leftTile)
-        if self.valueAtLocation(state, rightTile) not in (1, 2):
-            ret.append(rightTile)
-        if self.valueAtLocation(state, topTile) not in (1, 2):
-            ret.append(topTile)
-        if self.valueAtLocation(state, bottomTile) not in (1, 2):
-            ret.append(bottomTile)
-        
-        return ret
-
-    def closestMoveOutOfDanger(self, state, loc):
-        # divide and conquer
-
-        initialStates = self.immediateMovableTilesNearby(state, loc)
-        
-        print "[closestMoveOutOfDanger] Initial states: " + repr(initialStates)
-
-        if len(initialStates) == 0:
-            print "nowhere to move out of danger"
-            return loc  # nowhere to move
-
-        minimumState = None
-        minimumStateLength = 100000     # a sufficiently big number
-
-        for st in initialStates:
-            length = self.recursiveSearchForSafety(state, st, None)
-            if length <= minimumStateLength:
-                minimumState = st
-                minimumStateLength = length
-
-        print "[closestMoveOutOfDanger] Best move out of danger: " + repr(minimumState)
-
-        if minimumState is None:
-            # wat? i guess return anything...
-            pass
-        else:
-            return minimumState
-
-    def lengthOfShortestPathOutOfDanger(self, state, loc):
-        mov = loc
-        length = 0
-
-        while True:
-            if self.tileIsWithinBombPath(state, mov):
-                mov = self.closestMoveOutOfDanger(state, mov)
-                print "[lengthOfShortestPathOutOfDanger] Moving along path  " + repr(mov)
-                length = length + 1
-                if length >= 5:
-                    return length
-            else:
-                break
-
-        return length
-
-    def tileIsWithinBombPath(self, state, loc):
-        return self.valueAtLocation(state, loc) == 3
-
-    def bestSafeMoveTowardsEnemey(self, state, loc):
-        # assumptions: not already in bomb path
-        legal_moves = state.legal_moves()
-        rel_loc = state.opponent_relative_location()
-
-        opp_move = set()
-        if rel_loc.x > 0:
-            opp_move.add('mr')
-        else:
-            opp_move.add('ml')
-        if rel_loc.y < 0:
-            opp_move.add('mu')
-        else:
-            opp_move.add('md')
-
-        moves = opp_move.intersection(legal_moves)
-
-        if not moves:
-            if not legal_moves:
-                return ''
-            return random.choice(tuple(legal_moves))
-        else:
-            return random.choice(tuple(moves))
-
-    def closestMoveOutOfDangerFromBomb(self, state, bomb_loc):
-        st = deepcopy(state)
-        st.board = state.bomb_effected_area(bomb_loc)
-        return self.closestMoveOutOfDanger(st, bomb_loc)
-
-    def possibleToSurviveDroppingBomb(self, state, loc, bomb_loc):
-        # should just call closestMoveOutOfDangerFromBomb iteratively and
-        # see if its less than 3
-        
-        st = deepcopy(state)
-        st.board = state.bomb_effected_area(bomb_loc)
-        
-        length = self.lengthOfShortestPathOutOfDanger(st, loc)
-
-        return length <= 3
-    
-
-    def get_optimal_moves(self, state):
-        if self.tileIsWithinBombPath(state, state.player_location):
-            # in danger, move, hopefully towards opponent
-
-            firstMove = self.closestMoveOutOfDanger(state, state.player_location)
-            
-            return self.serialize(state, [firstMove])
-            # eh, just move towards enemy
-
-        # not in range of bomb, see if there's a good place to put one
-
-        movables = self.movableTiles(state, state.player_location)
-
-        if len(movables) == 0:
-            # nowhere to move, what do
-            print "Nowhere to move. :("
-            return self.serialize(state, [None, None])
-
-        possibleBombs = movables[:]
-        possibleBombs.append(state.player_location)
-
-        # have good moves, let's see if we can drop a bomb anywhere
-        bestBombPlaces = self.mostBeneficialImmediateBombLocations(state, possibleBombs)
-
-        # check to see if these kill you, are in-escapable
-
-        bombLocation = None
-
-        for pl in bestBombPlaces:
-            
-            if self.possibleToSurviveDroppingBomb(state, state.player_location, pl):
-                print "??? can survive"
-                bombLocation = pl
-                break
-        
-        print repr(state.player_location)
-
-        if bombLocation:
-            print "found a good bomb loc" + repr(bombLocation.x) + " " + repr(bombLocation.y)
-            if bombLocation.x == state.player_location.x and bombLocation.y == state.player_location.y:
-                nextMove = self.closestMoveOutOfDangerFromBomb(state, bombLocation)
-                print "i am here"
-                return self.serialize(state, ['b'])
-            else:
-                print "fuck me"
-                return self.serialize(state, [bombLocation])
-
-        else:
-#            return [self.bestSafeMoveTowardsEnemey(state, state.player_location)]
-            pass
-            # meh, just move somewhere in the right direction
-
-        return self.serialize(state, [None])
 
     def numberOfTilesDestroyedByBombAtLocation(self, state, loc):
         n = 0
@@ -256,31 +72,62 @@ class QualifierBot(Bot):
 
         return n
 
-    def mostBeneficialImmediateBombLocations(self, state, locations):
-        return sorted(locations, key=lambda x:
-                self.numberOfTilesDestroyedByBombAtLocation(state, x))
+    def isCurrentLocationInDanger(self, state):
+        return self.valueAtLocation(state, state.player_location) == 3
+
+    def getSurvivableBombLocation(self, state, location):
+        possibleLocations = self.reachableLocations(state, location)
+        possibleSurvivableLocations = [bombLoc for bombLoc in possibleLocations if self.survivable(state, state.player_location, bombLoc)]
+        
+        bestSurvivable = sorted(locations, key=lambda x: self.numberOfTilesDestroyedByBombAtLocation(state, x))
+        
+        if len(bestSurvivable) == 0:
+            return None
+
+        return bestSurvivable[-1]
+            
+    def get_optimal_moves(self, state):
+        if self.isCurrentLocationInDanger(state, state.player_location):
+            return bestMoveOutOfDanger(state, state.player_location)
+
+        bestSurvivableBombLocation = self.getSurvivableBombLocation(state, state.player_location)
+
+        if bestSurvivableBombLocation is state.player_location:
+            return ['b']
+        else:
+            return self.moveInDirectionOf(state, state.player_location, bestSurvivableBombLocation)
+
+        return random.choice(['mr', 'md', 'ml', 'mu'])
 
     def valueAtLocation(self, state, tile):
         return state.board[tile.x][tile.y]
 
-    def tileIsMovable(self, state, tile):
-        return self.valueAtLocation(state, tile) == 0
+    # true if we are able to get out from bomb explosion in `tick` moves or less
+    def survivable(self, state, currentLocation, bombLocation, tick=3):
+        move = currentLocation
+        
+        length = 0
+        
+        while True:
+            length = length + 1
+            move = bestMoveOutOfDanger(state, move)
+            if self.valueAtLocation(state, move) == 0:
+                # it's safe t move here
+                return (length <= tick)
+            else:
+                if length > tick:
+                    return False
 
-    def movableTiles(self, state, loc):
-        saneTiles = []
+        return False
 
-        lefTile = Location(loc.x - 1, loc.y)
-        rightTile = Location(loc.x + 1, loc.y)
-        topTile = Location(loc.x, loc.y - 1)
-        bottomTile = Location(loc.x, loc.y + 1)
 
-        if self.tileIsMovable(state, lefTile):
-            saneTiles.append(lefTile)
-        if self.tileIsMovable(state, rightTile):
-            saneTiles.append(rightTile)
-        if self.tileIsMovable(state, topTile):
-            saneTiles.append(topTile)
-        if self.tileIsMovable(state, bottomTile):
-            saneTiles.append(bottomTile)
+    def reachableLocations(self, state, loc):
+        possibleTiles = []
+    
+    
+    def moveInDirectionOf(self, state, start, finish):
+    
+    def bestMoveOutOfDanger(self, state, location):
 
-        return saneTiles
+
+
