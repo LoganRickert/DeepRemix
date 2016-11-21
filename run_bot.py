@@ -16,4 +16,4 @@ if __name__ == '__main__':
         print "MAKING MOVES " + repr(moves)
         
 #        for move in moves:
-        game.submit_move(moves[0])
+        game.submit_move(moves)

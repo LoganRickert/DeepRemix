@@ -6,17 +6,7 @@ from game import Location
 
 boardSize = 11
 
-
-def sgn(x):
-    if x < 0:
-        return -1
-    else:
-        return 1
-    return 0
-
-
 class QualifierBot(Bot):
-    bombs = []
     
     def __init__(self, state):
         self.states = [state]
@@ -72,20 +62,39 @@ class QualifierBot(Bot):
 
         return n
 
-    def isCurrentLocationInDanger(self, state):
-        return self.valueAtLocation(state, state.player_location) == 3
+    def isCurrentLocationInDanger(self, state, location):
+        return self.valueAtLocation(state, location) == 3
 
     def getSurvivableBombLocation(self, state, location):
         possibleLocations = self.reachableLocations(state, location)
         possibleSurvivableLocations = [bombLoc for bombLoc in possibleLocations if self.survivable(state, state.player_location, bombLoc)]
         
-        bestSurvivable = sorted(locations, key=lambda x: self.numberOfTilesDestroyedByBombAtLocation(state, x))
+        bestSurvivable = sorted(possibleSurvivableLocations, key=lambda x: self.numberOfTilesDestroyedByBombAtLocation(state, x))
         
         if len(bestSurvivable) == 0:
             return None
 
         return bestSurvivable[-1]
-            
+
+    def getRandomMove(self, state, location):
+        movableTiles = []
+
+        lefTile = Location(loc.x - 1, loc.y)
+        rightTile = Location(loc.x + 1, loc.y)
+        topTile = Location(loc.x, loc.y - 1)
+        bottomTile = Location(loc.x, loc.y + 1)
+        
+        if self.valueAtLocation(state, lefTile) == 0:
+            movableTiles.append(lefTile)
+        if self.valueAtLocation(state, rightTile) == 0:
+            movableTiles.append(rightTile)
+        if self.valueAtLocation(state, topTile) == 0:
+            movableTiles.append(topTile)
+        if self.valueAtLocation(state, bottomTile) == 0:
+            movableTiles.append(bottomTile)
+                
+        return random.choice(movableTiles)
+
     def get_optimal_moves(self, state):
         if self.isCurrentLocationInDanger(state, state.player_location):
             return bestMoveOutOfDanger(state, state.player_location)
@@ -97,7 +106,7 @@ class QualifierBot(Bot):
         else:
             return self.moveInDirectionOf(state, state.player_location, bestSurvivableBombLocation)
 
-        return random.choice(['mr', 'md', 'ml', 'mu'])
+        return getRandomMove(state, state.player_location)
 
     def valueAtLocation(self, state, tile):
         return state.board[tile.x][tile.y]
@@ -110,7 +119,7 @@ class QualifierBot(Bot):
         
         while True:
             length = length + 1
-            move = bestMoveOutOfDanger(state, move)
+            move = self.bestMoveOutOfDanger(state, move)
             if self.valueAtLocation(state, move) == 0:
                 # it's safe t move here
                 return (length <= tick)
@@ -120,14 +129,38 @@ class QualifierBot(Bot):
 
         return False
 
+    def _reachableLocationSearch(self, state, loc, tiles):
+        
+        for t in tiles:
+            if loc.x == t.x and loc.y == t.y:
+                return False
+        
+        if self.valueAtLocation(state, loc) == 1 or self.valueAtLocation(state, loc) == 2:
+            return False
+        else:
+            tiles.append(loc)
+                
+        if ((loc.x < len(state.board)-1 and self._reachableLocationSearch(state, Location(loc.x + 1, loc.y), tiles))
+            or (loc.y > 0 and self._reachableLocationSearch(state, Location(loc.x, loc.y - 1), tiles))
+            or (loc.x > 0 and self._reachableLocationSearch(state, Location(loc.x - 1, loc.y), tiles))
+            or (loc.y < len(state.board) - 1 and self._reachableLocationSearch(state, Location(loc.x, loc.y + 1), tiles))):
+            return True
+            
+        return False
 
     def reachableLocations(self, state, loc):
-        possibleTiles = []
-    
+        tiles = []
+        self._reachableLocationSearch(state, loc, tiles)
+        print "found " + repr(tiles)
+        return tiles
+
     
     def moveInDirectionOf(self, state, start, finish):
+        pass
     
     def bestMoveOutOfDanger(self, state, location):
+        reachables = reachableLocations
+        pass
 
 
 
