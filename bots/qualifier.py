@@ -79,7 +79,7 @@ class QualifierBot(Bot):
         possibleLocations = self.reachableLocations(state, location)
         possibleSurvivableLocations = [bombLoc for bombLoc in possibleLocations if self.survivable(state, state.player_location, bombLoc)]
 
-        bestSurvivable = sorted(locations, key=lambda x: self.numberOfTilesDestroyedByBombAtLocation(state, x))
+        bestSurvivable = sorted(possibleSurvivableLocations, key=lambda x: self.numberOfTilesDestroyedByBombAtLocation(state, x))
 
         if len(bestSurvivable) == 0:
             return None
@@ -88,7 +88,7 @@ class QualifierBot(Bot):
 
     def get_optimal_moves(self, state):
         if self.isCurrentLocationInDanger(state, state.player_location):
-            return bestMoveOutOfDanger(state, state.player_location)
+            return self.bestMoveOutOfDanger(state, state.player_location)
 
         bestSurvivableBombLocation = self.getSurvivableBombLocation(state, state.player_location)
 
@@ -104,21 +104,7 @@ class QualifierBot(Bot):
 
     # true if we are able to get out from bomb explosion in `tick` moves or less
     def survivable(self, state, currentLocation, bombLocation, tick=3):
-        move = currentLocation
-
-        length = 0
-
-        while True:
-            length = length + 1
-            move = bestMoveOutOfDanger(state, move)
-            if self.valueAtLocation(state, move) == 0:
-                # it's safe t move here
-                return (length <= tick)
-            else:
-                if length > tick:
-                    return False
-
-        return False
+        return self.length_to_location(self, state, currentLocation, bombLocation) <= tick
 
 
     def reachableLocations(self, state, loc):
@@ -148,3 +134,12 @@ class QualifierBot(Bot):
             return random.choice(tuple(moves))  # move in the direction you want to go
 
     def bestMoveOutOfDanger(self, state, location):
+        # called when bot is in danger
+        possibleLocations = self.reachableLocations(state, location)
+        locations_out_of_danger = [bombLoc for bombLoc in possibleLocations if self.survivable(state, state.player_location, bombLoc)]
+        location_out_of_danger = sorted(locations_out_of_danger, key=lambda loc: self.length_to_location(state, loc))[0]
+
+        return self.moveInDirectionOf(state, location, location_out_of_danger)
+
+    def length_to_location(self, state, start, finish):
+        pass
