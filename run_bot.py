@@ -11,10 +11,9 @@ if __name__ == '__main__':
     bot = QualifierBot(game.state)
 
     while not game.state.completed:
-        moves = bot.get_optimal_moves(game.state)
+        moves = bot.get_move(game.state)
         
-        print game.state.board
+        print "MAKING MOVES " + repr(moves)
         
-        
-        for move in moves:
-            game.submit_move(move)
+#        for move in moves:
+        game.submit_move(moves)
