@@ -54,13 +54,23 @@ class GameState:
                 json['player']['y'])
         self.opponent_location = Location(json['opponent']['x'],
                 json['opponent']['y'])
+        self.player_index = json['playerIndex']
+        self.alive = json['player']['alive']
 
+        self.bomb_map = json['bombMap']
         self.board = self.bomb_effected_area(json['bombMap'])
         # board representation: board[x][y] = 3 if in bomb path, 2 if hard
         # block, 1 if soft block, 0 if nothing
+        self.board[self.opponent_location.x][self.opponent_location.y] = -1
+
+    def my_bomb_on_map(self):
+        for k, v in self.bomb_map.iteritems():
+            if v['owner'] == self.player_index:
+                return True
+        return False
 
     def loc_blocked(self, loc):
-        return True if self.board[loc.x][loc.y] in (1, 2) else False
+        return True if self.board[loc.x][loc.y] in (1, 2, -1) else False
 
     def legal_moves(self):
         '''
@@ -92,12 +102,12 @@ class GameState:
             locations = [bomb_map]
 
         for loc in locations:
-            for n in xrange(loc.x - range_, loc.x + range_):
+            for n in xrange(loc.x - range_, 1 + loc.x + range_):
                 if n < 0 or n > 10:
                     continue
                 if board[n][loc.y] not in (1, 2):
                     board[n][loc.y] = 3
-            for n in xrange(loc.y - range_, loc.y + range_):
+            for n in xrange(loc.y - range_, 1 + loc.y + range_):
                 if n < 0 or n > 10:
                     continue
                 if board[loc.x][n] not in (1, 2):
