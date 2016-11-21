@@ -6,21 +6,24 @@ class Location:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-    
+
     def __repr__(self):
         return "(" + repr(self.x) + ", " + repr(self.y) + ")"
 
     def up(self):
-        return Location(self.x, self.y + 1)
+        return Location(self.x, self.y - 1)
 
     def down(self):
-        return Location(self.x, self.y - 1)
+        return Location(self.x, self.y + 1)
 
     def right(self):
         return Location(self.x + 1, self.y)
 
     def left(self):
         return Location(self.x - 1, self.y)
+
+    def __sub__(self, other):
+        return Location(other.x - self.x, other.y - self.y)
 
 
 class GameState:
@@ -29,7 +32,7 @@ class GameState:
 
     '''
     def __init__(self, json):
-        
+
         hard_tiles = json['hardBlockBoard']
         soft_tiles = json['softBlockBoard']
         blocked_tiles = [2 if h else 1 if s else 0 for h, s in

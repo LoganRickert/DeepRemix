@@ -17,18 +17,18 @@ def sgn(x):
 
 class QualifierBot(Bot):
     bombs = []
-    
+
     def __init__(self, state):
         self.states = [state]
-    
+
     def get_move(self, state):
         self.states.append(state)
         print "=================================="
         print "STARTING NEW STATE: "
         self.printBoard(state)
-        
+
         return self.get_optimal_moves(state)
-    
+
     def printBoard(self, state):
         for i in range(1, 10):
             for j in range(1, 10):
@@ -78,14 +78,14 @@ class QualifierBot(Bot):
     def getSurvivableBombLocation(self, state, location):
         possibleLocations = self.reachableLocations(state, location)
         possibleSurvivableLocations = [bombLoc for bombLoc in possibleLocations if self.survivable(state, state.player_location, bombLoc)]
-        
+
         bestSurvivable = sorted(locations, key=lambda x: self.numberOfTilesDestroyedByBombAtLocation(state, x))
-        
+
         if len(bestSurvivable) == 0:
             return None
 
         return bestSurvivable[-1]
-            
+
     def get_optimal_moves(self, state):
         if self.isCurrentLocationInDanger(state, state.player_location):
             return bestMoveOutOfDanger(state, state.player_location)
@@ -105,9 +105,9 @@ class QualifierBot(Bot):
     # true if we are able to get out from bomb explosion in `tick` moves or less
     def survivable(self, state, currentLocation, bombLocation, tick=3):
         move = currentLocation
-        
+
         length = 0
-        
+
         while True:
             length = length + 1
             move = bestMoveOutOfDanger(state, move)
@@ -123,11 +123,28 @@ class QualifierBot(Bot):
 
     def reachableLocations(self, state, loc):
         possibleTiles = []
-    
-    
+
+
     def moveInDirectionOf(self, state, start, finish):
-    
+        legal_moves = state.legal_moves()
+        relative_location = finish - start
+        moves_to_relative_location = set()
+        if relative_location.x > 0:
+            moves_to_relative_location.add('mr')
+        else:
+            moves_to_relative_location.add('ml')
+        if relative_location.y < 0:
+            moves_to_relative_location.add('mu')
+        else:
+            moves_to_relative_location.add('md')
+
+        moves = moves_to_relative_location.intersection(legal_moves)
+
+        if not moves:   # no overlap between where you want to go and legal moves
+            if not legal_moves:     # no legal moves, do nothing
+                return ''
+            return random.choice(tuple(legal_moves))    #choose a random legal move
+        else:
+            return random.choice(tuple(moves))  # move in the direction you want to go
+
     def bestMoveOutOfDanger(self, state, location):
-
-
-
