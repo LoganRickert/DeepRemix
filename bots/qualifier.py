@@ -70,7 +70,7 @@ class QualifierBot(Bot):
         return ret
 
     def recursiveSearchForSafety(self, state, loc, prev):
-        initialStates = self.immediateTilesNearby(state, loc)
+        initialStates = self.immediateMovableTilesNearby(state, loc)
 
         for st in initialStates:
             if prev is not None and (st.x != prev.x or st.y != prev.y):
@@ -80,7 +80,7 @@ class QualifierBot(Bot):
                     return 1 + self.recursiveSearchForSafety(state, st, loc)
         return 100000
 
-    def immediateTilesNearby(self, state, loc):
+    def immediateMovableTilesNearby(self, state, loc):
         ret = []
 
         leftTile = Location(loc.x - 1, loc.y)
@@ -100,12 +100,13 @@ class QualifierBot(Bot):
 
     def closestMoveOutOfDanger(self, state, loc):
         # divide and conquer
-        
-        print "IN DANGER"
 
-        initialStates = self.immediateTilesNearby(state, loc)
+        initialStates = self.immediateMovableTilesNearby(state, loc)
+        
+        print "[closestMoveOutOfDanger] Initial states: " + repr(initialStates)
 
         if len(initialStates) == 0:
+            print "nowhere to move out of danger"
             return loc  # nowhere to move
 
         minimumState = None
@@ -117,7 +118,7 @@ class QualifierBot(Bot):
                 minimumState = st
                 minimumStateLength = length
 
-        print str(minimumState.x) + " " + str(minimumState.y)
+        print "[closestMoveOutOfDanger] Best move out of danger: " + repr(minimumState)
 
         if minimumState is None:
             # wat? i guess return anything...
@@ -132,7 +133,10 @@ class QualifierBot(Bot):
         while True:
             if self.tileIsWithinBombPath(state, mov):
                 mov = self.closestMoveOutOfDanger(state, mov)
+                print "[lengthOfShortestPathOutOfDanger] Moving along path  " + repr(mov)
                 length = length + 1
+                if length >= 5:
+                    return length
             else:
                 break
 
@@ -173,34 +177,22 @@ class QualifierBot(Bot):
     def possibleToSurviveDroppingBomb(self, state, loc, bomb_loc):
         # should just call closestMoveOutOfDangerFromBomb iteratively and
         # see if its less than 3
-        mov = loc
-        length = 0
-        while True:
-            # should be just > ?
-            if length >= 3:
-                return False
-            if self.tileIsWithinBombPath(state, mov):
-                mov = self.closestMoveOutOfDangerFromBomb(state, bomb_loc)
-                length += 1
-            else:
-                break
-        return True
+        
+        st = deepcopy(state)
+        st.board = state.bomb_effected_area(bomb_loc)
+        
+        length = self.lengthOfShortestPathOutOfDanger(st, loc)
+
+        return length <= 3
+    
 
     def get_optimal_moves(self, state):
         if self.tileIsWithinBombPath(state, state.player_location):
             # in danger, move, hopefully towards opponent
 
-            firstMove = self.closestMoveOutOfDanger(state,
-                    state.player_location)
-            secondMove = None
-
-            if self.tileIsWithinBombPath(state, firstMove):
-                secondMove = self.closestMoveOutOfDanger(state, firstMove)
-
-            else:
-                secondMove = self.bestSafeMoveTowardsEnemey(state, firstMove)
-
-            return self.serialize(state, [firstMove, secondMove])
+            firstMove = self.closestMoveOutOfDanger(state, state.player_location)
+            
+            return self.serialize(state, [firstMove])
             # eh, just move towards enemy
 
         # not in range of bomb, see if there's a good place to put one
@@ -216,38 +208,37 @@ class QualifierBot(Bot):
         possibleBombs.append(state.player_location)
 
         # have good moves, let's see if we can drop a bomb anywhere
-        bestBombPlaces = self.mostBeneficialImmediateBombLocations(state,
-                possibleBombs)
+        bestBombPlaces = self.mostBeneficialImmediateBombLocations(state, possibleBombs)
 
         # check to see if these kill you, are in-escapable
 
         bombLocation = None
 
         for pl in bestBombPlaces:
+            
             if self.possibleToSurviveDroppingBomb(state, state.player_location, pl):
                 print "??? can survive"
                 bombLocation = pl
                 break
         
-        print "found a good bomb loc" + repr(bombLocation.x) + " " + repr(bombLocation.y)
-
         print repr(state.player_location)
 
         if bombLocation:
+            print "found a good bomb loc" + repr(bombLocation.x) + " " + repr(bombLocation.y)
             if bombLocation.x == state.player_location.x and bombLocation.y == state.player_location.y:
                 nextMove = self.closestMoveOutOfDangerFromBomb(state, bombLocation)
                 print "i am here"
-                return self.serialize(state, ['b', nextMove])
+                return self.serialize(state, ['b'])
             else:
                 print "fuck me"
-                return self.serialize(state, [bombLocation, 'b'])
+                return self.serialize(state, [bombLocation])
 
         else:
-            return ['mr', '']
+#            return [self.bestSafeMoveTowardsEnemey(state, state.player_location)]
             pass
             # meh, just move somewhere in the right direction
 
-        return self.serialize(state, [None, None])
+        return self.serialize(state, [None])
 
     def numberOfTilesDestroyedByBombAtLocation(self, state, loc):
         n = 0

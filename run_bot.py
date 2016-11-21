@@ -13,8 +13,6 @@ if __name__ == '__main__':
     while not game.state.completed:
         moves = bot.get_move(game.state)
         
-        print game.state.board
-        
         print "MAKING MOVES " + repr(moves)
         
 #        for move in moves:

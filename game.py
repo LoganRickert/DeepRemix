@@ -30,9 +30,6 @@ class GameState:
     '''
     def __init__(self, json):
         
-        traceback.print_stack()
-        
-        print repr(json) + "WHAT"
         hard_tiles = json['hardBlockBoard']
         soft_tiles = json['softBlockBoard']
         blocked_tiles = [2 if h else 1 if s else 0 for h, s in
@@ -133,7 +130,6 @@ class Game:
 
     def _submit_move(self, move):
         data = {'playerID': self.playerID, 'move': move, 'devkey': self.devkey}
-        print repr(data)  + "no"
         response = requests.post(self.url, data)
         self.state = GameState(response.json())
 
