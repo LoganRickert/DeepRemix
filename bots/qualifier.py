@@ -1,6 +1,7 @@
 import random
 from copy import deepcopy
 from bot import Bot
+import sys
 from game import Location
 
 boardSize = 11
@@ -22,8 +23,26 @@ class QualifierBot(Bot):
 
     def get_move(self, state):
         self.states.append(state)
+        print "=================================="
+        print "STARTING NEW STATE: "
+        self.printBoard(state)
 
         return self.get_optimal_moves(state)
+    
+    def printBoard(self, state):
+        for i in range(1, 10):
+            for j in range(1, 10):
+                if state.player_location.x == j and state.player_location.y == i:
+                    sys.stdout.write("|^|")
+                elif state.board[j][i] == 2:
+                    sys.stdout.write("|*|")
+                elif state.board[j][i] == 1:
+                    sys.stdout.write("|#|")
+                elif state.board[j][i] == 0:
+                    sys.stdout.write("| |")
+                elif state.board[j][i] == 3:
+                    sys.stdout.write("|@|")
+            print ""
 
     def directionBetweenMoves(self, loc, dest):
         if dest.y > loc.y:
@@ -50,8 +69,55 @@ class QualifierBot(Bot):
 
         return ret
 
+    def recursiveSearchForSafety(self, state, loc, prev):
+        initialStates = self.immediateTilesNearby(state, loc)
+        
+        for st in initialStates:
+            if prev is not None and (st.x != prev.x or st.y != prev.y):
+                if self.valueAtLocation(state, st) == 0:
+                    return 1
+                elif self.valueAtLocation(state, st) == 3:
+                    return 1 + self.recursiveSearchForSafety(state, st, loc)
+        return 0
+
+    def immediateTilesNearby(self, state, loc):
+        ret = []
+        
+        leftTile = Location(loc.x - 1, loc.y)
+        rightTile = Location(loc.x + 1, loc.y)
+        topTile = Location(loc.x, loc.y - 1)
+        bottomTile = Location(loc.x, loc.y + 1)
+        ret.append(leftTile)
+        ret.append(rightTile)
+        ret.append(topTile)
+        ret.append(bottomTile)
+        
+        return ret
+
     def closestMoveOutOfDanger(self, state, loc):
-        pass
+        # divide and conquer
+    
+        initialStates = self.immediateTilesNearby(state, loc)
+        
+        if len(initialStates) == 0:
+            return loc # nowhere to move
+
+        minimumState = None
+        minimumStateLength = 100000 # a sufficiently big number
+        
+        for st in initialStates:
+            length = self.recursiveSearchForSafety(state, st, None)
+            if length <= minimumStateLength:
+                minimumState = st
+                minimumStateLength = length
+
+        if minimumState is None:
+            # wat? i guess return anything...
+            pass
+        else:
+            return minimumState
+
+
 
     def lengthOfShortestPathOutOfDanger(self, state, loc):
         mov = loc
@@ -67,7 +133,6 @@ class QualifierBot(Bot):
         return length
 
     def tileIsWithinBombPath(self, state, loc):
-        print "b" + repr(loc)
         return self.valueAtLocation(state, loc) == 3
 
     def bestSafeMoveTowardsEnemey(self, state, loc):
@@ -88,9 +153,9 @@ class QualifierBot(Bot):
         moves = opp_move.intersection(legal_moves)
 
         if not moves:
-            return random.choice(legal_moves)
+            return random.choice(tuple(legal_moves))
         else:
-            return random.choice(moves)
+            return random.choice(tuple(moves))
 
     def closestMoveOutOfDangerFromBomb(self, state, bomb_loc):
         st = deepcopy(state)
@@ -105,21 +170,19 @@ class QualifierBot(Bot):
         while True:
             # should be just > ?
             if length >= 3:
-                return True
+                return False
             if self.tileIsWithinBombPath(state, mov):
                 mov = self.closestMoveOutOfDangerFromBomb(state, bomb_loc)
                 length += 1
             else:
                 break
-        return False
+        return True
 
     def get_optimal_moves(self, state):
-        print "a" + repr(state.player_location)
         if self.tileIsWithinBombPath(state, state.player_location):
             # in danger, move, hopefully towards opponent
 
-            firstMove = self.closestMoveOutOfDanger(state,
-                    state.player_location)
+            firstMove = self.closestMoveOutOfDanger(state, state.player_location)
             secondMove = None
 
             if self.tileIsWithinBombPath(state, firstMove):
@@ -167,6 +230,7 @@ class QualifierBot(Bot):
                 return self.serialize(state, [bombLocation, 'b'])
 
         else:
+            return ['mr', '']
             pass
             # meh, just move somewhere in the right direction
 
@@ -189,12 +253,9 @@ class QualifierBot(Bot):
         return n
 
     def mostBeneficialImmediateBombLocations(self, state, locations):
-
-        return sorted(locations, key=lambda x:
-                self.numberOfTilesDestroyedByBombAtLocation(state, x))
+        return sorted(locations, key=lambda x: self.numberOfTilesDestroyedByBombAtLocation(state, x))
 
     def valueAtLocation(self, state, tile):
-        print "c" + repr(tile)
         return state.board[tile.x][tile.y]
 
     def tileIsMovable(self, state, tile):

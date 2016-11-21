@@ -117,8 +117,6 @@ class Game:
         response = requests.post(url, data={'devkey': devkey,
             'username': username}).json()
 
-        print response
-
         self.url += response['gameID']
         self.playerID = response['playerID']
         self.devkey = devkey
@@ -126,12 +124,8 @@ class Game:
         self.state = GameState(response)
 
     def _submit_move(self, move):
-        print move
         data = {'playerID': self.playerID, 'move': move, 'devkey': self.devkey}
-        print data
         response = requests.post(self.url, data)
-        print response
-        print self.url
         self.state = GameState(response.json())
 
     def submit_move(self, userMove):
