@@ -62,13 +62,13 @@ class QualifierBot(Bot):
 
         return n
 
-    def isCurrentLocationInDanger(self, state, location):
+    def inDanger(self, state, location):
         return self.valueAtLocation(state, location) == 3
 
     def getSurvivableBombLocation(self, state, location):
         possibleLocations = self.reachableLocations(state, location)
         possibleSurvivableLocations = [bombLoc for bombLoc in possibleLocations
-                if self.survivable(state, state.player_location, bombLoc)]
+                if self.willSurviveBombPlacedAt(state, location, bombLoc)]
 
         bestSurvivable = sorted(possibleSurvivableLocations, key=lambda x:
                 self.numberOfTilesDestroyedByBombAtLocation(state, x))
@@ -98,9 +98,10 @@ class QualifierBot(Bot):
         return random.choice(movableTiles)
 
     def get_optimal_moves(self, state):
-        if self.isCurrentLocationInDanger(state, state.player_location):
+        if self.inDanger(state, state.player_location):
             print "In Danger!"
-            return self.bestMoveOutOfDanger(state, state.player_location)
+            return self.moveInDirectionOf(state, state.player_location,
+                    self.bestLocationOutOfDanger(state, state.player_location))
 
         print "Not in Danger."
         bestSurvivableBombLocation = self.getSurvivableBombLocation(state,
@@ -120,19 +121,14 @@ class QualifierBot(Bot):
     def valueAtLocation(self, state, tile):
         return state.board[tile.x][tile.y]
 
-    def survivable(self, state, currentLocation, bombLocation, tick=3):
-        length = self.length_to_location(state, currentLocation,
-                bombLocation)
-        survivable = length <= tick
-
-        print "Length from " + repr(currentLocation) + " to " +\
-            repr(bombLocation) + ": " + repr(length)
-        print "Survivable?: " + repr(survivable)
+    def willSurviveBombPlacedAt(self, state, location, tick=3):
+        safety = self.bestLocationOutOfDanger(state, location)
+        length_to_safety = self.length_to_location(state, location, safety)
+        survivable = length_to_safety <= 3
 
         return survivable
 
     def _reachableLocationSearch(self, state, loc, tiles):
-
         for t in tiles:
             if loc.x == t.x and loc.y == t.y:
                 return False
@@ -188,17 +184,17 @@ class QualifierBot(Bot):
         else:
             return random.choice(tuple(moves))
 
-    def bestMoveOutOfDanger(self, state, location):
+    def bestLocationOutOfDanger(self, state, location):
         possibleLocations = self.reachableLocations(state, location)
-        locations_out_of_danger = [bombLoc for bombLoc in possibleLocations if
-                self.survivable(state, location, bombLoc)]
+        locations_out_of_danger = [loc for loc in possibleLocations if
+                not self.inDanger(state, location)]
         print "Locations out of danger: " + repr(locations_out_of_danger)
         location_out_of_danger = sorted(locations_out_of_danger,
                 key=lambda loc:
                 self.length_to_location(state, location, loc))[0]
         print "Best location: " + repr(location_out_of_danger)
 
-        return self.moveInDirectionOf(state, location, location_out_of_danger)
+        return location_out_of_danger
 
     def find_path(self, graph, start, finish, path=[]):
         path = path + [start]
