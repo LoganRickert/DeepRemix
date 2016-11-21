@@ -25,6 +25,9 @@ class Location:
     def __sub__(self, other):
         return Location(other.x - self.x, other.y - self.y)
 
+    def __eq__(self, other):
+        return other.x == self.x && other.y == self.y
+
 
 class GameState:
     '''
@@ -103,6 +106,9 @@ class GameState:
         return Location(self.player_location.x - self.opponent_location.x,
                 self.player_location.y - self.opponent_location.y)
 
+    def __getitem__(self, loc):
+        return set([location for location in [loc.up(), loc.down(),
+            loc.right(), loc.left()] if not loc_blocked(location)])
 
 class Game:
     '''

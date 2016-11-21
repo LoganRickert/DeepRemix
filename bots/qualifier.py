@@ -1,8 +1,6 @@
 import random
-from copy import deepcopy
 from bot import Bot
 import sys
-from game import Location
 
 boardSize = 11
 
@@ -141,5 +139,19 @@ class QualifierBot(Bot):
 
         return self.moveInDirectionOf(state, location, location_out_of_danger)
 
+    def find_path(self, graph, start, finish, path=[]):
+        path = path + [start]
+        if start == finish:
+            return path
+        shortest = None
+        for node in graph[start]:
+            if node not in path:
+                newpath = self.find_path(graph, node, finish, path)
+                if newpath:
+                    if not shortest or len(newpath) < len(shortest):
+                        shortest = newpath
+        return shortest
+
     def length_to_location(self, state, start, finish):
-        pass
+        graph = make_graph(state)
+        return len(self.find_path(graph, start, finish))
