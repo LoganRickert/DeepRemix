@@ -81,12 +81,12 @@ class GameState:
             for n in xrange(loc.x - range_, loc.x + range_):
                 if n < 0 or n > 10:
                     continue
-                if board[n][loc.y] != 2:
+                if board[n][loc.y] not in (1, 2):
                     board[n][loc.y] = 3
             for n in xrange(loc.y - range_, loc.y + range_):
                 if n < 0 or n > 10:
                     continue
-                if board[loc.x][n] != 2:
+                if board[loc.x][n] not in (1, 2):
                     board[loc.x][n] = 3
 
         return board
