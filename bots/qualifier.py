@@ -28,11 +28,12 @@ class QualifierBot(Bot):
         self.printBoard(state)
 
         return self.get_optimal_moves(state)
-    
+
     def printBoard(self, state):
         for i in range(1, 10):
             for j in range(1, 10):
-                if state.player_location.x == j and state.player_location.y == i:
+                if state.player_location.x == j and\
+                        state.player_location.y == i:
                     sys.stdout.write("|^|")
                 elif state.board[j][i] == 2:
                     sys.stdout.write("|*|")
@@ -71,7 +72,7 @@ class QualifierBot(Bot):
 
     def recursiveSearchForSafety(self, state, loc, prev):
         initialStates = self.immediateTilesNearby(state, loc)
-        
+
         for st in initialStates:
             if prev is not None and (st.x != prev.x or st.y != prev.y):
                 if self.valueAtLocation(state, st) == 0:
@@ -82,7 +83,7 @@ class QualifierBot(Bot):
 
     def immediateTilesNearby(self, state, loc):
         ret = []
-        
+
         leftTile = Location(loc.x - 1, loc.y)
         rightTile = Location(loc.x + 1, loc.y)
         topTile = Location(loc.x, loc.y - 1)
@@ -91,20 +92,20 @@ class QualifierBot(Bot):
         ret.append(rightTile)
         ret.append(topTile)
         ret.append(bottomTile)
-        
+
         return ret
 
     def closestMoveOutOfDanger(self, state, loc):
         # divide and conquer
-    
+
         initialStates = self.immediateTilesNearby(state, loc)
-        
+
         if len(initialStates) == 0:
-            return loc # nowhere to move
+            return loc  # nowhere to move
 
         minimumState = None
-        minimumStateLength = 100000 # a sufficiently big number
-        
+        minimumStateLength = 100000     # a sufficiently big number
+
         for st in initialStates:
             length = self.recursiveSearchForSafety(state, st, None)
             if length <= minimumStateLength:
@@ -116,8 +117,6 @@ class QualifierBot(Bot):
             pass
         else:
             return minimumState
-
-
 
     def lengthOfShortestPathOutOfDanger(self, state, loc):
         mov = loc
@@ -145,7 +144,7 @@ class QualifierBot(Bot):
             opp_move.add('mr')
         else:
             opp_move.add('ml')
-        if rel_loc.y > 0:
+        if rel_loc.y < 0:
             opp_move.add('mu')
         else:
             opp_move.add('md')
@@ -184,7 +183,8 @@ class QualifierBot(Bot):
         if self.tileIsWithinBombPath(state, state.player_location):
             # in danger, move, hopefully towards opponent
 
-            firstMove = self.closestMoveOutOfDanger(state, state.player_location)
+            firstMove = self.closestMoveOutOfDanger(state,
+                    state.player_location)
             secondMove = None
 
             if self.tileIsWithinBombPath(state, firstMove):
@@ -255,7 +255,8 @@ class QualifierBot(Bot):
         return n
 
     def mostBeneficialImmediateBombLocations(self, state, locations):
-        return sorted(locations, key=lambda x: self.numberOfTilesDestroyedByBombAtLocation(state, x))
+        return sorted(locations, key=lambda x:
+                self.numberOfTilesDestroyedByBombAtLocation(state, x))
 
     def valueAtLocation(self, state, tile):
         return state.board[tile.x][tile.y]
