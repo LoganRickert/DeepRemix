@@ -1,3 +1,4 @@
+import random
 from copy import deepcopy
 from bot import Bot
 from game import Location
@@ -71,9 +72,25 @@ class QualifierBot(Bot):
 
     def bestSafeMoveTowardsEnemey(self, state, loc):
         # assumptions: not already in bomb path
-        direction = ''
+        legal_moves = state.legal_moves()
+        rel_loc = state.opponent_relative_location()
 
-        return 'm' + direction
+        opp_move = set()
+        if rel_loc.x > 0:
+            opp_move.add('mr')
+        else:
+            opp_move.add('ml')
+        if rel_loc.y > 0:
+            opp_move.add('mu')
+        else:
+            opp_move.add('md')
+
+        moves = opp_move.intersection(legal_moves)
+
+        if not moves:
+            return random.choice(legal_moves)
+        else:
+            return random.choice(moves)
 
     def closestMoveOutOfDangerFromBomb(self, state, bomb_loc):
         st = deepcopy(state)

@@ -6,6 +6,18 @@ class Location:
         self.x = x
         self.y = y
 
+    def up(self):
+        return Location(self.x, self.y + 1)
+
+    def down(self):
+        return Location(self.x, self.y - 1)
+
+    def right(self):
+        return Location(self.x + 1, self.y)
+
+    def left(self):
+        return Location(self.x - 1, self.y)
+
 
 class GameState:
     '''
@@ -30,6 +42,31 @@ class GameState:
                 json['opponent']['y'])
 
         self.board = self.bomb_effected_area(json['bombMap'])
+        # board representation: board[x][y] = 3 if in bomb path, 2 if hard
+        # block, 1 if soft block, 0 if nothing
+
+    def loc_blocked(self, loc):
+        return True if self.board[loc.x][loc.y] in (1, 2) else False
+
+    def legal_moves(self):
+        '''
+        returns the set of legal moves
+        '''
+        # TODO: add bomb, portal, buys
+        legal_moves = set(['mu', 'md', 'mr', 'ml', ''])
+
+        loc = self.player_location
+
+        if self.loc_blocked(loc.up()):
+            legal_moves.remove('mu')
+        if self.loc_blocked(loc.down()):
+            legal_moves.remove('md')
+        if self.loc_blocked(loc.right()):
+            legal_moves.remove('mr')
+        if self.loc_blocked(loc.left()):
+            legal_moves.remove('ml')
+
+        return legal_moves
 
     def bomb_effected_area(self, bomb_map):
         board = self.board
