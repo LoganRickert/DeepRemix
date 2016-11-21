@@ -1,10 +1,14 @@
 import requests
-
+import traceback
+import sys
 
 class Location:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+    
+    def __repr__(self):
+        return "(" + repr(self.x) + ", " + repr(self.y) + ")"
 
     def up(self):
         return Location(self.x, self.y + 1)
@@ -25,6 +29,10 @@ class GameState:
 
     '''
     def __init__(self, json):
+        
+        traceback.print_stack()
+        
+        print repr(json) + "WHAT"
         hard_tiles = json['hardBlockBoard']
         soft_tiles = json['softBlockBoard']
         blocked_tiles = [2 if h else 1 if s else 0 for h, s in
@@ -32,7 +40,7 @@ class GameState:
         self.board = [blocked_tiles[i: i + 11] for i in
                 xrange(0, len(blocked_tiles), 11)]
         # transpose board
-        self.board = map(list, zip(*self.board))
+#        self.board = map(list, zip(*self.board))
 
         self.completed = json['state'] == 'completed'
 
@@ -75,7 +83,7 @@ class GameState:
             locations = [Location(int(k[0]), int(k[2])) for k, v in
                     bomb_map.iteritems()]
         else:
-            locations = bomb_map
+            locations = [bomb_map]
 
         for loc in locations:
             for n in xrange(loc.x - range_, loc.x + range_):
@@ -125,6 +133,7 @@ class Game:
 
     def _submit_move(self, move):
         data = {'playerID': self.playerID, 'move': move, 'devkey': self.devkey}
+        print repr(data)  + "no"
         response = requests.post(self.url, data)
         self.state = GameState(response.json())
 

@@ -32,8 +32,7 @@ class QualifierBot(Bot):
     def printBoard(self, state):
         for i in range(1, 10):
             for j in range(1, 10):
-                if state.player_location.x == j and\
-                        state.player_location.y == i:
+                if state.player_location.x == j and state.player_location.y == i:
                     sys.stdout.write("|^|")
                 elif state.board[j][i] == 2:
                     sys.stdout.write("|*|")
@@ -46,9 +45,9 @@ class QualifierBot(Bot):
             print ""
 
     def directionBetweenMoves(self, loc, dest):
-        if dest.y > loc.y:
+        if dest.y < loc.y:
             return 'mu'
-        elif dest.y < loc.y:
+        elif dest.y > loc.y:
             return 'md'
         elif dest.x < loc.x:
             return 'ml'
@@ -79,7 +78,7 @@ class QualifierBot(Bot):
                     return 1
                 elif self.valueAtLocation(state, st) == 3:
                     return 1 + self.recursiveSearchForSafety(state, st, loc)
-        return 0
+        return 100000
 
     def immediateTilesNearby(self, state, loc):
         ret = []
@@ -88,19 +87,21 @@ class QualifierBot(Bot):
         rightTile = Location(loc.x + 1, loc.y)
         topTile = Location(loc.x, loc.y - 1)
         bottomTile = Location(loc.x, loc.y + 1)
-        if self.valueAtLocation(state, leftTile) != 2:
+        if self.valueAtLocation(state, leftTile) not in (1, 2):
             ret.append(leftTile)
-        if self.valueAtLocation(state, rightTile) != 2:
+        if self.valueAtLocation(state, rightTile) not in (1, 2):
             ret.append(rightTile)
-        if self.valueAtLocation(state, topTile) != 2:
+        if self.valueAtLocation(state, topTile) not in (1, 2):
             ret.append(topTile)
-        if self.valueAtLocation(state, bottomTile) != 2:
+        if self.valueAtLocation(state, bottomTile) not in (1, 2):
             ret.append(bottomTile)
         
         return ret
 
     def closestMoveOutOfDanger(self, state, loc):
         # divide and conquer
+        
+        print "IN DANGER"
 
         initialStates = self.immediateTilesNearby(state, loc)
 
@@ -115,6 +116,8 @@ class QualifierBot(Bot):
             if length <= minimumStateLength:
                 minimumState = st
                 minimumStateLength = length
+
+        print str(minimumState.x) + " " + str(minimumState.y)
 
         if minimumState is None:
             # wat? i guess return anything...
@@ -164,7 +167,7 @@ class QualifierBot(Bot):
 
     def closestMoveOutOfDangerFromBomb(self, state, bomb_loc):
         st = deepcopy(state)
-        st.board = self.bomb_effected_area(bomb_loc)
+        st.board = state.bomb_effected_area(bomb_loc)
         return self.closestMoveOutOfDanger(st, bomb_loc)
 
     def possibleToSurviveDroppingBomb(self, state, loc, bomb_loc):
@@ -207,7 +210,7 @@ class QualifierBot(Bot):
         if len(movables) == 0:
             # nowhere to move, what do
             print "Nowhere to move. :("
-            return
+            return self.serialize(state, [None, None])
 
         possibleBombs = movables[:]
         possibleBombs.append(state.player_location)
@@ -221,18 +224,22 @@ class QualifierBot(Bot):
         bombLocation = None
 
         for pl in bestBombPlaces:
-            if self.possibleToSurviveDroppingBomb(state, state.player_location,
-                    pl):
+            if self.possibleToSurviveDroppingBomb(state, state.player_location, pl):
+                print "??? can survive"
                 bombLocation = pl
                 break
+        
+        print "found a good bomb loc" + repr(bombLocation.x) + " " + repr(bombLocation.y)
 
-        if bombLocation is not None:
-            if bombLocation.x == state.player_location.x and\
-                    bombLocation.y == state.player_location.y:
-                nextMove = self.closestMoveOutOfDangerFromBomb(state,
-                        bombLocation)
+        print repr(state.player_location)
+
+        if bombLocation:
+            if bombLocation.x == state.player_location.x and bombLocation.y == state.player_location.y:
+                nextMove = self.closestMoveOutOfDangerFromBomb(state, bombLocation)
+                print "i am here"
                 return self.serialize(state, ['b', nextMove])
             else:
+                print "fuck me"
                 return self.serialize(state, [bombLocation, 'b'])
 
         else:
