@@ -99,14 +99,19 @@ class QualifierBot(Bot):
 
     def get_optimal_moves(self, state):
         if self.isCurrentLocationInDanger(state, state.player_location):
+            print "In Danger!"
             return self.bestMoveOutOfDanger(state, state.player_location)
 
+        print "Not in Danger."
         bestSurvivableBombLocation = self.getSurvivableBombLocation(state,
                 state.player_location)
 
+        print "Want to plant a bomb at " + repr(bestSurvivableBombLocation)
         if bestSurvivableBombLocation is state.player_location:
+            print "Planting bomb"
             return 'b'
         else:
+            print "Moving to plant a bomb"
             return self.moveInDirectionOf(state, state.player_location,
                     bestSurvivableBombLocation)
 
@@ -116,8 +121,15 @@ class QualifierBot(Bot):
         return state.board[tile.x][tile.y]
 
     def survivable(self, state, currentLocation, bombLocation, tick=3):
-        return self.length_to_location(state, currentLocation,
-                bombLocation) <= tick
+        length = self.length_to_location(state, currentLocation,
+                bombLocation)
+        survivable = length <= tick
+
+        print "Length from " + repr(currentLocation) + " to " +\
+            repr(bombLocation) + ": " + repr(length)
+        print "Survivable?: " + repr(survivable)
+
+        return survivable
 
     def _reachableLocationSearch(self, state, loc, tiles):
 
@@ -144,27 +156,30 @@ class QualifierBot(Bot):
         return False
 
     def reachableLocations(self, state, loc):
-
         tiles = []
         self._reachableLocationSearch(state, loc, tiles)
-        print "found " + repr(tiles)
+        print "Reachable Locations: " + repr(tiles)
         return tiles
 
     def moveInDirectionOf(self, state, start, finish):
-        print repr(start) + " " + repr(finish)
+        print "Trying to move from " + repr(start) + " to " + repr(finish)
         legal_moves = state.legal_moves()
+        print "Legal moves are: " + repr(legal_moves)
         relative_location = finish - start
+        print "Relative location " + repr(relative_location)
         moves_to_relative_location = set()
         if relative_location.x > 0:
             moves_to_relative_location.add('mr')
-        else:
+        elif relative_location.x < 0:
             moves_to_relative_location.add('ml')
         if relative_location.y < 0:
             moves_to_relative_location.add('mu')
-        else:
+        elif relative_location.y > 0:
             moves_to_relative_location.add('md')
+        print "Preferred moves are: " + repr(moves_to_relative_location)
 
         moves = moves_to_relative_location.intersection(legal_moves)
+        print "Overlap is: " + repr(moves)
 
         if not moves:
             if not legal_moves:     # no legal moves, do nothing
@@ -174,13 +189,14 @@ class QualifierBot(Bot):
             return random.choice(tuple(moves))
 
     def bestMoveOutOfDanger(self, state, location):
-        print "Finding best move out of danger"
         possibleLocations = self.reachableLocations(state, location)
         locations_out_of_danger = [bombLoc for bombLoc in possibleLocations if
-                self.survivable(state, state.player_location, bombLoc)]
+                self.survivable(state, location, bombLoc)]
+        print "Locations out of danger: " + repr(locations_out_of_danger)
         location_out_of_danger = sorted(locations_out_of_danger,
                 key=lambda loc:
                 self.length_to_location(state, location, loc))[0]
+        print "Best location: " + repr(location_out_of_danger)
 
         return self.moveInDirectionOf(state, location, location_out_of_danger)
 
@@ -198,5 +214,4 @@ class QualifierBot(Bot):
         return shortest
 
     def length_to_location(self, state, start, finish):
-        print "Finding path from " + repr(start) + " to " + repr(finish)
         return len(self.find_path(state, start, finish))

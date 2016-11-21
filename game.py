@@ -22,7 +22,8 @@ class Location:
         return Location(self.x - 1, self.y)
 
     def __sub__(self, other):
-        return Location(other.x - self.x, other.y - self.y)
+        # return Location(other.x - self.x, other.y - self.y)
+        return Location(self.x - other.x, self.y - other.y)
 
     def __eq__(self, other):
         return other.x == self.x and other.y == self.y
