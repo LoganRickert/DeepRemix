@@ -88,6 +88,8 @@ class QualifierBot(Bot):
         moves = opp_move.intersection(legal_moves)
 
         if not moves:
+            if not legal_moves:
+                return ''
             return random.choice(legal_moves)
         else:
             return random.choice(moves)
