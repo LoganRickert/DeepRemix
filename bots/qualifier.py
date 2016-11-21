@@ -95,12 +95,12 @@ class QualifierBot(Bot):
             ret.append(topTile)
         if self.valueAtLocation(state, bottomTile) not in (1, 2):
             ret.append(bottomTile)
-
+        
         return ret
 
     def closestMoveOutOfDanger(self, state, loc):
         # divide and conquer
-
+        
         print "IN DANGER"
 
         initialStates = self.immediateTilesNearby(state, loc)
@@ -166,22 +166,21 @@ class QualifierBot(Bot):
             return random.choice(tuple(moves))
 
     def closestMoveOutOfDangerFromBomb(self, state, bomb_loc):
+        st = deepcopy(state)
+        st.board = state.bomb_effected_area(bomb_loc)
         return self.closestMoveOutOfDanger(st, bomb_loc)
 
     def possibleToSurviveDroppingBomb(self, state, loc, bomb_loc):
         # should just call closestMoveOutOfDangerFromBomb iteratively and
         # see if its less than 3
-        st = deepcopy(state)
-        st.board = state.bomb_effected_area(bomb_loc)
-
         mov = loc
         length = 0
         while True:
             # should be just > ?
             if length >= 3:
                 return False
-            if self.tileIsWithinBombPath(st, mov):
-                mov = self.closestMoveOutOfDangerFromBomb(st, bomb_loc)
+            if self.tileIsWithinBombPath(state, mov):
+                mov = self.closestMoveOutOfDangerFromBomb(state, bomb_loc)
                 length += 1
             else:
                 break
@@ -229,7 +228,7 @@ class QualifierBot(Bot):
                 print "??? can survive"
                 bombLocation = pl
                 break
-
+        
         print "found a good bomb loc" + repr(bombLocation.x) + " " + repr(bombLocation.y)
 
         print repr(state.player_location)
