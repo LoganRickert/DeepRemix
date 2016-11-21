@@ -88,11 +88,15 @@ class QualifierBot(Bot):
         rightTile = Location(loc.x + 1, loc.y)
         topTile = Location(loc.x, loc.y - 1)
         bottomTile = Location(loc.x, loc.y + 1)
-        ret.append(leftTile)
-        ret.append(rightTile)
-        ret.append(topTile)
-        ret.append(bottomTile)
-
+        if self.valueAtLocation(state, leftTile) != 2:
+            ret.append(leftTile)
+        if self.valueAtLocation(state, rightTile) != 2:
+            ret.append(rightTile)
+        if self.valueAtLocation(state, topTile) != 2:
+            ret.append(topTile)
+        if self.valueAtLocation(state, bottomTile) != 2:
+            ret.append(bottomTile)
+        
         return ret
 
     def closestMoveOutOfDanger(self, state, loc):
