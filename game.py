@@ -1,6 +1,5 @@
 import requests
-import traceback
-import sys
+
 
 class Location:
     def __init__(self, x, y):
@@ -112,6 +111,7 @@ class GameState:
     def __getitem__(self, loc):
         return set([location for location in [loc.up(), loc.down(),
             loc.right(), loc.left()] if not self.loc_blocked(location)])
+
 
 class Game:
     '''
