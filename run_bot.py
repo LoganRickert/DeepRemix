@@ -3,7 +3,7 @@ from bots import QualifierBot
 
 #devkey = '58268225b642e9d038e35c52'
 #username = 'charlieyou'
-devkey = '582632dd3c0cc0ed06f9d05a'
+devkey = '58343b88dd23e7896bf06c01'
 username = 'mxms'
 
 if __name__ == '__main__':
