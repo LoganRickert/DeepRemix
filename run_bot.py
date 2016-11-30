@@ -5,7 +5,7 @@ devkey = '58343b88dd23e7896bf06c01'
 username = 'mxms'
 
 if __name__ == '__main__':
-    game = Game(devkey, username, practice=True, local=False)
+    game = Game(devkey, username, practice=True)
     bot = QualifierBot(game.state)
 
     while not game.state.completed:
