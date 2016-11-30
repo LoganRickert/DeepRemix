@@ -42,18 +42,18 @@ class GameState:
         hard_tiles = json['hardBlockBoard']
         soft_tiles = json['softBlockBoard']
         blocked_tiles = [2 if h else 1 if s else 0 for h, s in
-                zip(hard_tiles, soft_tiles)]
+                         zip(hard_tiles, soft_tiles)]
         self.board = [blocked_tiles[i: i + 11] for i in
-                xrange(0, len(blocked_tiles), 11)]
+                      xrange(0, len(blocked_tiles), 11)]
         # transpose board
 #        self.board = map(list, zip(*self.board))
 
         self.completed = json['state'] == 'completed'
 
         self.player_location = Location(json['player']['x'],
-                json['player']['y'])
+                                        json['player']['y'])
         self.opponent_location = Location(json['opponent']['x'],
-                json['opponent']['y'])
+                                          json['opponent']['y'])
         self.player_index = json['playerIndex']
         self.alive = json['player']['alive']
 
@@ -62,6 +62,25 @@ class GameState:
         # board representation: board[x][y] = 3 if in bomb path, 2 if hard
         # block, 1 if soft block, 0 if nothing
         self.board[self.opponent_location.x][self.opponent_location.y] = -1
+
+    def __repr__(self):
+        out = ''
+        for i in range(1, 10):
+            for j in range(1, 10):
+                if self.player_location.x == j and\
+                        self.player_location.y == i:
+                    out += "|^|"
+                elif self.board[j][i] == 2:
+                    out += "|*|"
+                elif self.board[j][i] == 1:
+                    out += "|#|"
+                elif self.board[j][i] == 0:
+                    out += "| |"
+                elif self.board[j][i] == 3:
+                    out += "|@|"
+            out += '\n'
+
+        return out
 
     def my_bomb_on_map(self):
         for k, v in self.bomb_map.iteritems():
@@ -97,7 +116,7 @@ class GameState:
         range_ = 3
         if isinstance(bomb_map, dict):
             locations = [Location(int(k[0]), int(k[2])) for k, v in
-                    bomb_map.iteritems()]
+                         bomb_map.iteritems()]
         else:
             locations = [bomb_map]
 
@@ -117,11 +136,12 @@ class GameState:
 
     def opponent_relative_location(self):
         return Location(self.player_location.x - self.opponent_location.x,
-                self.player_location.y - self.opponent_location.y)
+                        self.player_location.y - self.opponent_location.y)
 
     def __getitem__(self, loc):
-        return set([location for location in [loc.up(), loc.down(),
-            loc.right(), loc.left()] if not self.loc_blocked(location)])
+        return set([location for location in [
+            loc.up(), loc.down(), loc.right(), loc.left()]
+            if not self.loc_blocked(location)])
 
 
 class Game:
@@ -142,8 +162,8 @@ class Game:
         else:
             url += 'api/games/search'
 
-        response = requests.post(url, data={'devkey': devkey,
-            'username': username}).json()
+        response = requests.post(
+                url, data={'devkey': devkey, 'username': username}).json()
 
         self.url += response['gameID']
         self.playerID = response['playerID']
