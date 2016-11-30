@@ -7,15 +7,13 @@ from bot import Bot
 
 
 class MCTSBot(Bot):
-    def __init__(self, state, sim_time=10):
-        self.states = [state]
+    def __init__(self, state, player_id, sim_time=10):
+        self.player_id = player_id
         self.sim_time = sim_time
 
         self.state_node = {}
 
     def get_move(self, state):
-        self.states.append(state)
-
         state = copy.deepcopy(state)
         move = self.mcts(state)
 
@@ -39,7 +37,7 @@ class MCTSBot(Bot):
         n_simulations = 0
         start = time.time()
         while time.time() - start < self.sim_time and root.moves_unfinished:
-            node = self.policy(root)
+            node = self.tree_policy(root)
             result = self.simulate(node.state)
             self.back_prop(node, result)
             n_simulations += 1
@@ -53,6 +51,8 @@ class MCTSBot(Bot):
             print '{}: ({}/{})'.format(
                     position, results[position][0], results[position][1])
         print '{} simulations performed.'.format(n_simulations)
+
+        return self.best_action(root)
 
     def tree_policy(self, root):
         current_node = root
@@ -75,7 +75,7 @@ class MCTSBot(Bot):
                         move for move in legal_moves
                         if move not in current_node.moves_expanded]
 
-                move = random.choie(unexpanded)
+                move = random.choice(unexpanded)
                 state = current_node.state.next_state(move)
                 child = Node(state, move, len(legal_moves))
                 current_node.add_child(child)
@@ -83,7 +83,7 @@ class MCTSBot(Bot):
                 return child
 
     def best_child(self, node):
-        enemy_turn = not node.state.player_turn
+        enemy_turn = (node.state.move_iterator != self.player_id)
         C = 1   # exploration value
         values = {}
         for child in node.children:
@@ -109,7 +109,7 @@ class MCTSBot(Bot):
             move = random.choice(moves)
             state = state.next_state(move)
 
-        if state.winner:
+        if state.winner() == self.player.id:
             return REWARD
         else:
             return LOSS
@@ -153,7 +153,7 @@ class Node:
         self.children = []
         self.parent = None
         self.moves_expanded = set()
-        self.moves_unfinished
+        self.moves_unfinished = n_children
 
         self.move = move
 

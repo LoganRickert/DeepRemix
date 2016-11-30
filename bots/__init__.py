@@ -1,1 +1,2 @@
-from qualifier import QualifierBot
+# from qualifier import QualifierBot
+from mcts import MCTSBot
