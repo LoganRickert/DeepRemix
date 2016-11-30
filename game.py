@@ -37,29 +37,25 @@ class GameState:
 
     '''
     def __init__(self, json):
-
         hard_tiles = json['hardBlockBoard']
         soft_tiles = json['softBlockBoard']
         blocked_tiles = [2 if h else 1 if s else 0 for h, s in
                          zip(hard_tiles, soft_tiles)]
         self.board = [blocked_tiles[i: i + 11] for i in
                       xrange(0, len(blocked_tiles), 11)]
-        # transpose board
-#        self.board = map(list, zip(*self.board))
 
         self.completed = json['state'] == 'completed'
-
         self.player_location = Location(json['player']['x'],
                                         json['player']['y'])
         self.opponent_location = Location(json['opponent']['x'],
                                           json['opponent']['y'])
         self.player_index = json['playerIndex']
         self.alive = json['player']['alive']
-
         self.bomb_map = json['bombMap']
-        self.board = self.bomb_effected_area(json['bombMap'])
+
         # board representation: board[x][y] = 3 if in bomb path, 2 if hard
         # block, 1 if soft block, 0 if nothing
+        self.board = self.bomb_effected_area(json['bombMap'])
         self.board[self.opponent_location.x][self.opponent_location.y] = -1
 
     def __repr__(self):
@@ -77,6 +73,8 @@ class GameState:
                     out += "| |"
                 elif self.board[j][i] == 3:
                     out += "|@|"
+                else:
+                    out += "|x|"
             out += '\n'
 
         return out
