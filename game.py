@@ -171,38 +171,7 @@ class Game:
 
         self.state = GameState(response)
 
-    def _submit_move(self, move):
+    def submit_move(self, move):
         data = {'playerID': self.playerID, 'move': move, 'devkey': self.devkey}
         response = requests.post(self.url, data)
         self.state = GameState(response.json())
-
-    def submit_move(self, userMove):
-        if userMove == 'b':
-            self.drop_bomb()
-        elif userMove == '':
-            self.do_nothing()
-        elif userMove is None:
-            self.do_nothing()
-        elif userMove[0] == 'm':
-            self.move(userMove[-1:])
-        elif userMove[0] == 't':
-            self.turn(userMove[-1:])
-        # need to add the other moves
-
-    def drop_bomb(self):
-        self.submit_move('b')
-
-    def do_nothing(self):
-        self.submit_move('')
-
-    def move(self, direction):
-        self.submit_move('m' + direction[0])
-
-    def turn(self, direction):
-        self.submit_move('t' + direction[0])
-
-    def shoot_portal(self, color):
-        self.submit_move(color[0] + 'p')
-
-    def buy(self, power_up):
-        self.submit_move('buy_' + power_up)
