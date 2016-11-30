@@ -22,7 +22,6 @@ class Location:
         return Location(self.x - 1, self.y)
 
     def __sub__(self, other):
-        # return Location(other.x - self.x, other.y - self.y)
         return Location(self.x - other.x, self.y - other.y)
 
     def __eq__(self, other):
@@ -149,12 +148,8 @@ class Game:
     Game is used as a wrapper around the post requests with the server
 
     '''
-    def __init__(self, devkey, username, practice=True, local=True):
-        if local:
-            url = 'http://localhost:80/'
-        else:
-            url = 'http://aicomp.io/'
-
+    def __init__(self, devkey, username, practice=True, game_id=None):
+        url = 'http://aicomp.io/'
         self.url = url + 'api/games/submit/'
 
         if practice:
@@ -165,7 +160,11 @@ class Game:
         response = requests.post(
                 url, data={'devkey': devkey, 'username': username}).json()
 
-        self.url += response['gameID']
+        if game_id:
+            self.url += game_id
+        else:
+            self.url += response['gameID']
+
         self.playerID = response['playerID']
         self.devkey = devkey
 
