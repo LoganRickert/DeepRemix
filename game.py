@@ -22,7 +22,6 @@ class Location:
         return Location(self.x - 1, self.y)
 
     def __sub__(self, other):
-        # return Location(other.x - self.x, other.y - self.y)
         return Location(self.x - other.x, self.y - other.y)
 
     def __eq__(self, other):
@@ -38,30 +37,47 @@ class GameState:
 
     '''
     def __init__(self, json):
-
         hard_tiles = json['hardBlockBoard']
         soft_tiles = json['softBlockBoard']
         blocked_tiles = [2 if h else 1 if s else 0 for h, s in
-                zip(hard_tiles, soft_tiles)]
+                         zip(hard_tiles, soft_tiles)]
         self.board = [blocked_tiles[i: i + 11] for i in
-                xrange(0, len(blocked_tiles), 11)]
-        # transpose board
-#        self.board = map(list, zip(*self.board))
+                      xrange(0, len(blocked_tiles), 11)]
 
         self.completed = json['state'] == 'completed'
-
         self.player_location = Location(json['player']['x'],
-                json['player']['y'])
+                                        json['player']['y'])
         self.opponent_location = Location(json['opponent']['x'],
-                json['opponent']['y'])
+                                          json['opponent']['y'])
         self.player_index = json['playerIndex']
         self.alive = json['player']['alive']
-
         self.bomb_map = json['bombMap']
-        self.board = self.bomb_effected_area(json['bombMap'])
+
         # board representation: board[x][y] = 3 if in bomb path, 2 if hard
         # block, 1 if soft block, 0 if nothing
+        self.board = self.bomb_effected_area(json['bombMap'])
         self.board[self.opponent_location.x][self.opponent_location.y] = -1
+
+    def __repr__(self):
+        out = ''
+        for i in range(1, 10):
+            for j in range(1, 10):
+                if self.player_location.x == j and\
+                        self.player_location.y == i:
+                    out += "|^|"
+                elif self.board[j][i] == 2:
+                    out += "|*|"
+                elif self.board[j][i] == 1:
+                    out += "|#|"
+                elif self.board[j][i] == 0:
+                    out += "| |"
+                elif self.board[j][i] == 3:
+                    out += "|@|"
+                else:
+                    out += "|x|"
+            out += '\n'
+
+        return out
 
     def my_bomb_on_map(self):
         for k, v in self.bomb_map.iteritems():
@@ -97,7 +113,7 @@ class GameState:
         range_ = 3
         if isinstance(bomb_map, dict):
             locations = [Location(int(k[0]), int(k[2])) for k, v in
-                    bomb_map.iteritems()]
+                         bomb_map.iteritems()]
         else:
             locations = [bomb_map]
 
@@ -117,11 +133,12 @@ class GameState:
 
     def opponent_relative_location(self):
         return Location(self.player_location.x - self.opponent_location.x,
-                self.player_location.y - self.opponent_location.y)
+                        self.player_location.y - self.opponent_location.y)
 
     def __getitem__(self, loc):
-        return set([location for location in [loc.up(), loc.down(),
-            loc.right(), loc.left()] if not self.loc_blocked(location)])
+        return set([location for location in [
+            loc.up(), loc.down(), loc.right(), loc.left()]
+            if not self.loc_blocked(location)])
 
 
 class Game:
@@ -129,12 +146,8 @@ class Game:
     Game is used as a wrapper around the post requests with the server
 
     '''
-    def __init__(self, devkey, username, practice=True, local=True):
-        if local:
-            url = 'http://localhost:80/'
-        else:
-            url = 'http://aicomp.io/'
-
+    def __init__(self, devkey, username, practice=True, game_id=None):
+        url = 'http://aicomp.io/'
         self.url = url + 'api/games/submit/'
 
         if practice:
@@ -142,47 +155,20 @@ class Game:
         else:
             url += 'api/games/search'
 
-        response = requests.post(url, data={'devkey': devkey,
-            'username': username}).json()
+        response = requests.post(
+                url, data={'devkey': devkey, 'username': username}).json()
 
-        self.url += response['gameID']
+        if game_id:
+            self.url += game_id
+        else:
+            self.url += response['gameID']
+
         self.playerID = response['playerID']
         self.devkey = devkey
 
         self.state = GameState(response)
 
-    def _submit_move(self, move):
+    def submit_move(self, move):
         data = {'playerID': self.playerID, 'move': move, 'devkey': self.devkey}
         response = requests.post(self.url, data)
         self.state = GameState(response.json())
-
-    def submit_move(self, userMove):
-        if userMove == 'b':
-            self.drop_bomb()
-        elif userMove == '':
-            self.do_nothing()
-        elif userMove is None:
-            self.do_nothing()
-        elif userMove[0] == 'm':
-            self.move(userMove[-1:])
-        elif userMove[0] == 't':
-            self.turn(userMove[-1:])
-        # need to add the other moves
-
-    def drop_bomb(self):
-        self.submit_move('b')
-
-    def do_nothing(self):
-        self.submit_move('')
-
-    def move(self, direction):
-        self.submit_move('m' + direction[0])
-
-    def turn(self, direction):
-        self.submit_move('t' + direction[0])
-
-    def shoot_portal(self, color):
-        self.submit_move(color[0] + 'p')
-
-    def buy(self, power_up):
-        self.submit_move('buy_' + power_up)

@@ -1,7 +1,6 @@
 import random
 from bot import Bot
 from game import Location
-import sys
 from copy import deepcopy
 
 boardSize = 11
@@ -19,25 +18,9 @@ class QualifierBot(Bot):
         self.states.append(state)
         print "=================================="
         print "STARTING NEW STATE: "
-        self.printBoard(state)
+        print repr(state)
 
         return self.get_optimal_moves(state)
-
-    def printBoard(self, state):
-        for i in range(1, 10):
-            for j in range(1, 10):
-                if state.player_location.x == j and\
-                        state.player_location.y == i:
-                    sys.stdout.write("|^|")
-                elif state.board[j][i] == 2:
-                    sys.stdout.write("|*|")
-                elif state.board[j][i] == 1:
-                    sys.stdout.write("|#|")
-                elif state.board[j][i] == 0:
-                    sys.stdout.write("| |")
-                elif state.board[j][i] == 3:
-                    sys.stdout.write("|@|")
-            print ""
 
     def directionBetweenMoves(self, loc, dest):
         if dest.y < loc.y:
@@ -78,7 +61,8 @@ class QualifierBot(Bot):
         print "Figuring out where to plant a bomb."
         possibleLocations = self.reachableLocations(state, location)
         print "Possible locations: " + repr(possibleLocations)
-        possibleSurvivableLocations = [bombLoc for bombLoc in possibleLocations
+        possibleSurvivableLocations = [
+                bombLoc for bombLoc in possibleLocations
                 if self.willSurviveBombPlacedAt(state, bombLoc)]
         print "Survivable locations: " + repr(possibleSurvivableLocations)
 
@@ -86,7 +70,7 @@ class QualifierBot(Bot):
             return None
 
         return sorted(possibleSurvivableLocations, key=lambda bomb_loc:
-                self.location_score(state, location, bomb_loc))[-1]
+                      self.location_score(state, location, bomb_loc))[-1]
 
     def getRandomMove(self, state, loc):
         movableTiles = []
@@ -110,15 +94,16 @@ class QualifierBot(Bot):
     def get_optimal_moves(self, state):
         if self.inDanger(state, state.player_location):
             print "In Danger!"
-            return self.moveInDirectionOf(state, state.player_location,
+            return self.moveInDirectionOf(
+                    state, state.player_location,
                     self.bestLocationOutOfDanger(state, state.player_location))
 
         print "Not in Danger."
         if state.my_bomb_on_map() or self.states[-2].my_bomb_on_map():
             return None
 
-        bestSurvivableBombLocation = self.getSurvivableBombLocation(state,
-                state.player_location)
+        bestSurvivableBombLocation = self.getSurvivableBombLocation(
+                state, state.player_location)
 
         print "Want to plant a bomb at " + repr(bestSurvivableBombLocation)
         if bestSurvivableBombLocation is state.player_location:
@@ -127,8 +112,8 @@ class QualifierBot(Bot):
             return 'b'
         else:
             print "Moving to plant a bomb"
-            return self.moveInDirectionOf(state, state.player_location,
-                    bestSurvivableBombLocation)
+            return self.moveInDirectionOf(
+                    state, state.player_location, bestSurvivableBombLocation)
 
         return self.getRandomMove(state, state.player_location)
 
@@ -160,10 +145,10 @@ class QualifierBot(Bot):
 
         if ((loc.x < len(state.board) - 1 and self._reachableLocationSearch(
             state, Location(loc.x + 1, loc.y), tiles)) or
-            (loc.y > 0 and self._reachableLocationSearch(state,
-                Location(loc.x, loc.y - 1), tiles)) or
-            (loc.x > 0 and self._reachableLocationSearch(state,
-                Location(loc.x - 1, loc.y), tiles)) or
+            (loc.y > 0 and self._reachableLocationSearch(
+                state, Location(loc.x, loc.y - 1), tiles)) or
+            (loc.x > 0 and self._reachableLocationSearch(
+                state, Location(loc.x - 1, loc.y), tiles)) or
             (loc.y < len(state.board) - 1 and self._reachableLocationSearch(
                 state, Location(loc.x, loc.y + 1), tiles))):
             return True
@@ -204,10 +189,11 @@ class QualifierBot(Bot):
 
     def bestLocationOutOfDanger(self, state, location):
         possibleLocations = self.reachableLocations(state, location)
-        locations_out_of_danger = [loc for loc in possibleLocations if
-                not self.inDanger(state, loc)]
-        location_out_of_danger = sorted(locations_out_of_danger,
-                key=lambda loc:
+        locations_out_of_danger = [
+                loc for loc in possibleLocations if not self.inDanger(
+                    state, loc)]
+        location_out_of_danger = sorted(
+                locations_out_of_danger, key=lambda loc:
                 self.length_to_location(state, location, loc))
         if location_out_of_danger:
             return location_out_of_danger[0]
