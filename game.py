@@ -29,12 +29,124 @@ class GameState:
         self.portal_map = json['portalMap']
 
     def next_state(self, move):
-        state = copy.deepcopy(self)
 
-        # switch turn order
+        def detonate(state, loc, player):
+            loc = Location(int(loc[0]), int(loc[-1]))
+            # mark locations to be destroyed
+            marked = []
+            pierce = player.bomb_pierce
+            range_ = player.bomb_range
+
+            counter = -1
+            for n in xrange(loc.x, loc.x + range_ + 1):
+                if n <= 0 or n >= 10:
+                    continue
+                if state.board[n][loc.y] == 2:
+                    break
+                if counter < pierce:
+                    marked.append(Location(n, loc.y))
+                if state.board[n][loc.y] == 1:
+                    counter += 1
+
+            counter = -1
+            for n in xrange(loc.x - range_, loc.x + 1):
+                if n <= 0 or n >= 10:
+                    continue
+                if state.board[n][loc.y] == 2:
+                    break
+                if counter < pierce:
+                    marked.append(Location(n, loc.y))
+                if state.board[n][loc.y] == 1:
+                    counter += 1
+
+            counter = -1
+            for n in xrange(loc.y, loc.y + range_ + 1):
+                if n <= 0 or n >= 10:
+                    continue
+                if state.board[loc.x][n] == 2:
+                    break
+                if counter < pierce:
+                    marked.append(Location(loc.x, n))
+                if state.board[loc.x][n] == 1:
+                    counter += 1
+
+            counter = -1
+            for n in xrange(loc.y - range_, loc.y + 1):
+                if n <= 0 or n >= 10:
+                    continue
+                if state.board[loc.x][n] == 2:
+                    break
+                if counter < pierce:
+                    marked.append(Location(loc.x, n))
+                if state.board[loc.x][n] == 1:
+                    counter += 1
+
+            for location in marked:
+                state._destroy(location)
+
+            # kill players
+            players = (state.player, state.opponent)
+            for player in players:
+                if player.location in marked:
+                    state.completed = True
+                    player.alive = False
+
+            # remove from dictionary
+            state.bomb_map.pop('{},{}'.format(loc.x, loc.y))
+
+            # TODO explode other bombs
+            for k, v in state.bomb_map.iteritems():
+                if Location(int(k[0]), int(k[-1])) in marked:
+                    pass
+
+        state = copy.deepcopy(self)
+        # explode bombs
+        it = list(state.bomb_map.iteritems())
+        for loc, bomb in it:
+            if state.player.id == bomb['owner']:
+                bomb['tick'] -= 1
+                if bomb['tick'] == 0:
+                    detonate(state, loc, state.player)
+
+        # move player
+        if move.startswith('m'):
+            loc = state.player.location
+            if move.endswith('u'):
+                state.player.location = loc.up()
+            elif move.endswith('d'):
+                state.player.location = loc.down()
+            elif move.endswith('r'):
+                state.player.location = loc.right()
+            else:
+                state.player.location = loc.left()
+
+        # buy upgrades
+        elif move.startswith('buy'):
+            state.player.coins -= 5
+            if move.endswith('range'):
+                state.player.bomb_range += 1
+            elif move.endswith('count'):
+                state.player.bomb_count += 1
+            elif move.endswith('pierce'):
+                state.player.bomb_pierce += 1
+
+        # place bomb
+        elif move == 'b':
+            loc = state.player.location
+            state.bomb_map['{},{}'.format(loc.x, loc.y)] = {
+                    'owner': state.player.id, 'tick': 4}
+
+        # turn
+
+        # place portal
+
+        # increment turn order
         index = state.move_order.index(state.move_iterator)
         if index == 0:
             state.move_iterator = state.move_order[1]
+            temp = state.opponent
+            state.opponent = state.player
+            state.player = temp
         else:
             state.move_order = state.move_order[::-1]
 
@@ -54,8 +166,9 @@ class GameState:
         '''
         # TODO: add portals and turning, buy_block
         legal_moves = [
-            'b', 'mu', 'md', 'mr', 'ml',
-            'buy_range', 'buy_count', 'buy_pierce']
+            # '', 'b', 'mu', 'md', 'mr', 'ml',
+            # 'buy_range', 'buy_count', 'buy_pierce']
+            '', 'b', 'mu', 'md', 'mr', 'ml']
 
         loc = self.player.location
 
@@ -67,43 +180,35 @@ class GameState:
             legal_moves.remove('mr')
         if self._loc_blocked(loc.left()):
             legal_moves.remove('ml')
-        if self._bomb_at(loc):
+        if self._bomb_at(loc) or\
+                self._player_bombs_on_map() >= self.player.bomb_count:
             legal_moves.remove('b')
         if self.player.coins < 5:
-            legal_moves.remove('buy_range')
-            legal_moves.remove('buy_pierce')
-            legal_moves.remove('buy_count')
+            # legal_moves.remove('buy_range')
+            # legal_moves.remove('buy_pierce')
+            # legal_moves.remove('buy_count')
+            pass
 
         return legal_moves
 
+    def _player_bombs_on_map(self):
+        count = 0
+        for k, v in self.bomb_map.iteritems():
+            if v['owner'] == self.player.id:
+                count += 1
+        return count
+
     def _bomb_at(self, loc):
-        return '%,%'.format(loc.x, loc.y) in self.bomb_map
+        return '{},{}'.format(loc.x, loc.y) in self.bomb_map
 
     def _loc_blocked(self, loc):
-        return True if self.board[loc.x][loc.y] in (1, 2, -1) else False
+        try:
+            return True if self.board[loc.x][loc.y] in (1, 2) else False
+        except IndexError:
+            return True
 
-    def _bomb_effected_area(self, bomb_map):
-        board = self.board
-        range_ = 3
-        if isinstance(bomb_map, dict):
-            locations = [Location(int(k[0]), int(k[2])) for k, v in
-                         bomb_map.iteritems()]
-        else:
-            locations = [bomb_map]
-
-        for loc in locations:
-            for n in xrange(loc.x - range_, 1 + loc.x + range_):
-                if n < 0 or n > 10:
-                    continue
-                if board[n][loc.y] not in (1, 2):
-                    board[n][loc.y] = 3
-            for n in xrange(loc.y - range_, 1 + loc.y + range_):
-                if n < 0 or n > 10:
-                    continue
-                if board[loc.x][n] not in (1, 2):
-                    board[loc.x][n] = 3
-
-        return board
+    def _destroy(self, loc):
+        self.board[loc.x][loc.y] = 0
 
     def __repr__(self):
         out = ''
@@ -112,6 +217,9 @@ class GameState:
                 if self.player.location.x == j and\
                         self.player.location.y == i:
                     out += "|^|"
+                elif self.opponent.location.x == j and\
+                        self.opponent.location.y == i:
+                    out += "|x|"
                 elif self.board[j][i] == 2:
                     out += "|*|"
                 elif self.board[j][i] == 1:
@@ -120,8 +228,6 @@ class GameState:
                     out += "| |"
                 elif self.board[j][i] == 3:
                     out += "|@|"
-                else:
-                    out += "|x|"
             out += '\n'
 
         return out
@@ -163,6 +269,7 @@ class Game:
     def submit_move(self, move):
         data = {'playerID': self.playerID, 'move': move, 'devkey': self.devkey}
         response = requests.post(self.url, data)
+        print response.json()
         self.state = GameState(response.json())
 
 

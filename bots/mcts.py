@@ -14,6 +14,7 @@ class MCTSBot(Bot):
         self.state_node = {}
 
     def get_move(self, state):
+        print repr(state)
         state = copy.deepcopy(state)
         move = self.mcts(state)
 
@@ -81,10 +82,13 @@ class MCTSBot(Bot):
                 current_node.add_child(child)
                 self.state_node[state] = child
                 return child
+            else:
+                current_node = self.best_child(current_node)
+        return current_node
 
     def best_child(self, node):
         enemy_turn = (node.state.move_iterator != self.player_id)
-        C = 1   # exploration value
+        C = 0   # exploration value
         values = {}
         for child in node.children:
             wins, plays = child.get_wins_plays()
@@ -100,18 +104,21 @@ class MCTSBot(Bot):
     def simulate(self, state):
         REWARD = 1
         LOSS = 0
-        state = copy.deepcopy(state)
+        # print self.player_id
         while not state.completed:
+            # print repr(state)
+            # print state.bomb_map
+            # print state.player.id
             moves = state.legal_moves()
-            if not moves:
-                state = state.next_state('')
-                moves = state.legal_moves()
             move = random.choice(moves)
+            # print move
             state = state.next_state(move)
 
-        if state.winner() == self.player.id:
+        if state.winner() == self.player_id:
+            # print 'win!'
             return REWARD
         else:
+            # print 'loss!'
             return LOSS
 
     @staticmethod
