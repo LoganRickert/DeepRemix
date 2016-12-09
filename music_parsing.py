@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 from __future__ import print_function
 import os
 
@@ -37,7 +39,7 @@ def parse_wav(filename, n_mfcc=40):
     return (song_data, sample_rate)
 
 
-def directory_to_array(filepath="./data/input_wavs", n_mfcc=40):
+def directory_to_array(filepath='./data/input_wavs', n_mfcc=40):
     '''
     Parses all wav files into Mel-Frequency Cepstrum Coefficients.
 
@@ -53,7 +55,7 @@ def directory_to_array(filepath="./data/input_wavs", n_mfcc=40):
     try:
         filenames = os.listdir(filepath)
     except OSError:
-        print("No such directory. Please Enter a valid directory.")
+        print('No such directory. Please Enter a valid directory.')
         sys.exit(1)
     for fname in filenames:
         song_mfcc_repr[fname] = parse_wav(fname, n_mfcc)
@@ -88,6 +90,24 @@ def array_to_wav(filename, time_series_data, sample_rate, filepath=None):
 
 
 if __name__ == "__main__":
+    # To test that it is outputting properly
+
+    if filepath is None:
+        filepath = './data/output_wavs'
+
+    filepath = os.path.join(filepath, filename)
+    try:
+
+        # This should output a wav file correctly. maybe?
+
+        librosa.output.write_wav(filepath, time_series_data,
+                                 sample_rate)
+    except:
+        print('Could not write data to {0}.'.format(filepath))
+
+
+if __name__ == '__main__':
+
     # For testing purposes
     # np.set_printoptions(precision=4,
     #                     linewidth=80,

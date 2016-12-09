@@ -26,6 +26,9 @@ var/
 
 # Data I/O files
 data/output_wavs/
+=======
+# I/O file data
+data/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
